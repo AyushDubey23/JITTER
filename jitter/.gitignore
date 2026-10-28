@@ -26,3 +26,4 @@ htmlcov/
 # Local testing
 examples/reports/*.tmp.json
 tmp/
+scratch/
