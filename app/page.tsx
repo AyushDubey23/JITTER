@@ -1,0 +1,113 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import { Activity, ArrowRight, Check, ChevronRight, Copy, Cpu, FileJson, Menu, Network, Thermometer, Upload, Zap } from 'lucide-react'
+
+const verdicts = ['Steady', 'Warmup drift', 'Delegate fallback', 'Background noise', 'Thermal throttling']
+const reruns = [
+  { title: 'Cold vs warm', note: 'Separate startup cost from steady state.', icon: Thermometer },
+  { title: 'Cooldown', note: 'Let heat leave the device. Re-run the same work.', icon: Activity },
+  { title: 'Delegate swap', note: 'Compare requested and actually executed delegates.', icon: Cpu },
+  { title: 'Quiet device', note: 'Measure the noise floor without background load.', icon: Zap },
+]
+const failureModes = [
+  ['Warmup drift', 'First iterations exceed steady-state median, then converge.'],
+  ['Thermal throttling', 'Rolling median climbs; latency recovers after cooldown.'],
+  ['Delegate fallback', 'Step change in median; telemetry reports a different delegate.'],
+  ['Background noise', 'Heavy-tailed spikes vanish when device load is controlled.'],
+  ['Genuine regression', 'Difference persists across all four controlled reruns.'],
+]
+
+function MiniTrace({ hot = 0.35, second = false }: { hot?: number; second?: boolean }) {
+  const points = Array.from({ length: 42 }, (_, i) => {
+    const wave = Math.sin(i * 0.7) * (2 + hot * 7)
+    const drift = hot * i * 0.32
+    const spike = i < 7 && !second ? (7 - i) * 4 : 0
+    return `${i * 7},${44 - wave - drift - spike}`
+  }).join(' ')
+  return <svg viewBox="0 0 290 60" className="h-16 w-full" role="img" aria-label="Simulated latency trace"><path d={`M ${points}`} fill="none" stroke={second ? '#2A1BFF' : `hsl(${195 - hot * 175} 100% 58%)`} strokeWidth="2" /><path d={`M ${points} L 290 60 L 0 60 Z`} fill={second ? 'rgba(42,27,255,.08)' : 'rgba(255,106,26,.08)'} /></svg>
+}
+
+function CopyButton({ text = 'pip install jitter' }: { text?: string }) {
+  const [copied, setCopied] = useState(false)
+  return <button className="inline-flex items-center gap-2 border border-[var(--line)] bg-[var(--raised)] px-4 py-3 font-mono text-sm text-[var(--text)] transition hover:border-[var(--hot)]" onClick={() => { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1400) }} aria-label={`Copy ${text}`}><span className="text-[var(--hot)]">$</span>{text}{copied ? <Check className="size-4 text-[var(--hot)]" /> : <Copy className="size-4 text-[var(--muted)]" />}</button>
+}
+
+function Header() {
+  return (
+    <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--ink)]/95 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+        <Link href="#top" className="flex items-center gap-2.5 font-display text-lg font-black tracking-[-.06em]">
+          <img src="/jitter-logo.png" alt="Jitter" className="size-7 rounded-md object-contain" />
+          <span>JITTER<span className="text-[var(--hot)]">.</span></span>
+        </Link>
+        <nav className="hidden items-center gap-6 text-sm text-[var(--muted)] md:flex">
+          <a href="#reruns" className="hover:text-[var(--text)]">Reruns</a>
+          <a href="#statistics" className="hover:text-[var(--text)]">Statistics</a>
+          <a href="#dashboard" className="hover:text-[var(--text)]">Dashboard demo</a>
+          <Link href="/docs" className="hover:text-[var(--text)]">Docs</Link>
+        </nav>
+        <div className="flex items-center gap-4">
+          <span className="hidden font-mono text-xs text-[var(--muted)] lg:inline-block">By <strong className="font-semibold text-[var(--text)]">Ayush Dubey</strong></span>
+          <Link href="/docs" className="hidden border border-[var(--hot)] px-3 py-2 text-xs font-semibold text-[var(--hot)] sm:block">Read the docs</Link>
+          <Menu className="size-5 md:hidden" />
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function PinnedHero() {
+  const ref = useRef<HTMLDivElement>(null); const [progress, setProgress] = useState(0)
+  useEffect(() => { const onScroll = () => { if (!ref.current) return; const r = ref.current.getBoundingClientRect(); setProgress(Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)))) }; addEventListener('scroll', onScroll, { passive: true }); onScroll(); return () => removeEventListener('scroll', onScroll) }, [])
+  const heat = .1 + progress * .9; const verdict = verdicts[Math.min(4, Math.floor(progress * 5))]; const temp = Math.round(33 + progress * 14)
+  return (
+    <section ref={ref} className="relative h-[200vh] md:h-[300vh]">
+      <div className="sticky top-0 flex min-h-svh items-start overflow-visible pt-16 md:h-svh md:items-center md:overflow-hidden md:pt-0">
+        <div className="grid-noise absolute inset-0 opacity-40" />
+        <div className="relative mx-auto w-full max-w-7xl px-5">
+          <div className="max-w-5xl">
+            <div className="mb-5 flex flex-wrap items-center gap-2.5">
+              <p className="font-mono text-xs text-[var(--muted)]">PREVIEW / ON-DEVICE LATENCY ANALYSIS</p>
+              <span className="text-[var(--line)]">·</span>
+              <span className="border border-[var(--line)] bg-[var(--surface)] px-2.5 py-0.5 font-mono text-xs text-[var(--hot)]">By Ayush Dubey</span>
+            </div>
+            <div className="thermal-wordmark-shell w-full" style={{ '--heat': heat } as React.CSSProperties}>
+              <h1 className="thermal-wordmark font-display text-[clamp(4rem,18vw,15rem)] font-black leading-[.78] tracking-[-.09em]">JITTER</h1>
+              <span className="sweat-drop sweat-drop-one" aria-hidden="true" />
+              <span className="sweat-drop sweat-drop-two" aria-hidden="true" />
+            </div>
+            <h2 className="mt-10 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-.05em] sm:text-5xl">Root-cause analysis for on-device ML latency.</h2>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-[var(--muted)]">Rerun a benchmark under four controlled conditions. Find out whether the slowdown is warmup, thermal throttling, delegate fallback, background load, or a real regression.</p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <CopyButton />
+              <Link href="/docs" className="inline-flex items-center gap-2 border border-[var(--line)] px-4 py-3 text-sm hover:border-[var(--text)]">Read the docs <ChevronRight className="size-4" /></Link>
+            </div>
+            <p className="mt-5 font-mono text-xs text-[var(--muted)]">Preview. All data on this page is simulated.</p>
+          </div>
+          <div className="absolute bottom-8 right-5 hidden w-72 border-l border-[var(--line)] pl-5 md:block">
+            <div className="mb-3 flex items-end justify-between">
+              <span className="font-mono text-xs text-[var(--muted)]">DEVICE TEMP</span>
+              <span className="font-mono text-3xl text-[var(--hot)]">{temp}°C</span>
+            </div>
+            <MiniTrace hot={heat} />
+            <div className="mt-3 inline-flex items-center gap-2 border border-[var(--orange)] px-3 py-2 font-mono text-xs text-[var(--orange)]">
+              <span className="size-2 rounded-full bg-current" />{verdict}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Reruns() { const [active, setActive] = useState(0); return <section id="reruns" className="border-y border-[var(--line)] bg-[var(--surface)]"><div className="mx-auto grid max-w-7xl gap-12 px-5 py-24 md:grid-cols-[.8fr_1.2fr] md:py-32"><div><p className="font-mono text-xs text-[var(--muted)]">CONTROLLED RERUNS</p><h2 className="mt-4 max-w-md font-display text-4xl font-semibold tracking-[-.05em] sm:text-6xl">Four ways to interrogate a slowdown.</h2><p className="mt-6 max-w-md leading-7 text-[var(--muted)]">A single median hides the cause. Jitter changes one condition at a time, records the device state, and keeps the evidence attached to the verdict.</p><div className="mt-10 flex flex-col">{reruns.map((item, i) => { const Icon = item.icon; return <button key={item.title} onClick={() => setActive(i)} className={`flex gap-4 border-l-2 p-4 text-left transition ${active === i ? 'border-[var(--hot)] bg-[var(--raised)]' : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]'}`}><Icon className={`mt-1 size-5 ${active === i ? 'text-[var(--hot)]' : ''}`} /><span><strong className="block font-semibold">{String(i + 1).padStart(2, '0')} / {item.title}</strong><span className="mt-1 block text-sm">{item.note}</span></span></button> })}</div></div><div className="grid-noise flex min-h-[360px] items-center border border-[var(--line)] bg-[var(--ink)] p-5 sm:p-10"><div className="w-full"><div className="mb-8 flex items-center justify-between font-mono text-xs text-[var(--muted)]"><span>RUN {String(active + 1).padStart(2, '0')} / 04</span><span>SIMULATED TRACE</span></div>{active === 0 && <><MiniTrace hot={.15} /><MiniTrace hot={.15} second /></>}{active === 1 && <><div className="h-40"><svg viewBox="0 0 400 160" className="h-full w-full"><path d="M0 30 C100 36 140 70 190 90 S300 130 400 145" fill="none" stroke="#FF6A1A" strokeWidth="3"/><path d="M0 110 C100 105 170 112 240 118 S340 120 400 121" fill="none" stroke="#2A1BFF" strokeWidth="2" strokeDasharray="5 5"/><text x="235" y="95" fill="#FFC933" fontSize="12">recovered after 4 min</text></svg></div></>}{active === 2 && <div className="space-y-5">{[['CPU', 68, '#7B2CFF'], ['GPU', 34, '#2A1BFF'], ['NNAPI', 91, '#FF6A1A']].map(([label, width, color]) => <div key={label} className="font-mono text-xs"><div className="mb-2 flex justify-between"><span>{label}</span><span>{width} ms</span></div><div className="h-7 bg-[var(--raised)]"><div className="h-full" style={{ width: `${width}%`, background: color as string }} /></div></div>)}<p className="mt-6 border-l-2 border-[var(--orange)] pl-3 font-mono text-xs text-[var(--orange)]">requested NNAPI, executed CPU</p></div>}{active === 3 && <><MiniTrace hot={.25} /><MiniTrace hot={.05} second /><p className="mt-5 font-mono text-xs text-[var(--cold)]">noise floor ± 0.4 ms when load is controlled</p></>}<div className="mt-10 flex gap-1">{reruns.map((_, i) => <div key={i} className={`h-1 flex-1 ${i === active ? 'bg-[var(--hot)]' : 'bg-[var(--line)]'}`} />)}</div></div></div></div></section> }
+
+function Statistics() { return <section id="statistics" className="mx-auto grid max-w-7xl gap-12 px-5 py-24 md:grid-cols-2 md:py-32"><div><p className="font-mono text-xs text-[var(--muted)]">STATISTICS / NOT JUST A MEDIAN</p><h2 className="mt-4 max-w-lg font-display text-4xl font-semibold tracking-[-.05em] sm:text-6xl">Make variance visible.</h2><p className="mt-6 max-w-lg leading-7 text-[var(--muted)]">Jitter trims warmup with a change-point detector, reports percentile and BCa bootstrap intervals, then compares runs with Mann–Whitney U and Cliff&apos;s delta.</p><div className="mt-10 grid grid-cols-3 gap-3 border-y border-[var(--line)] py-5 font-mono"><div><span className="block text-2xl text-[var(--hot)]">200</span><span className="text-xs text-[var(--muted)]">samples</span></div><div><span className="block text-2xl text-[var(--hot)]">10k</span><span className="text-xs text-[var(--muted)]">resamples</span></div><div><span className="block text-2xl text-[var(--hot)]">95%</span><span className="text-xs text-[var(--muted)]">CI</span></div></div></div><div className="border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-10"><div className="flex h-64 items-end gap-1 border-b border-l border-[var(--line)] p-4">{Array.from({ length: 34 }, (_, i) => <div key={i} className="flex-1 bg-[var(--violet)]" style={{ height: `${18 + Math.sin(i * .7) * 10 + (i > 14 && i < 25 ? 42 - Math.abs(20 - i) * 5 : 0)}%`, opacity: .45 + (i % 4) * .12 }} />)}</div><div className="mt-5 flex justify-between font-mono text-xs text-[var(--muted)]"><span>RAW / WARMUP INCLUDED</span><span className="text-[var(--hot)]">MEDIAN 14.1 ms</span></div><div className="mt-8 border-l-2 border-[var(--hot)] pl-4"><p className="font-mono text-sm">Mann–Whitney U = 4,281</p><p className="mt-1 font-mono text-xs text-[var(--muted)]">Hodges–Lehmann shift +2.3× · Cliff&apos;s δ 0.81</p></div></div></section> }
+
+function Dashboard() { const [report, setReport] = useState(false); return <section id="dashboard" className="border-t border-[var(--line)] bg-[var(--surface)]"><div className="mx-auto max-w-7xl px-5 py-24 md:py-32"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="font-mono text-xs text-[var(--muted)]">STATIC DASHBOARD / CLIENT-SIDE ONLY</p><h2 className="mt-4 font-display text-4xl font-semibold tracking-[-.05em] sm:text-6xl">Drop a report. See the evidence.</h2></div><p className="max-w-sm text-sm leading-6 text-[var(--muted)]">Nothing uploads. The preview parses JSON in your browser. Sample data is simulated.</p></div><div className="mt-12 grid gap-6 md:grid-cols-[1fr_1.4fr]"><label className="flex min-h-64 cursor-pointer flex-col items-center justify-center border border-dashed border-[var(--line)] bg-[var(--ink)] p-8 text-center hover:border-[var(--hot)]"><Upload className="mb-4 size-7 text-[var(--hot)]" /><span className="font-semibold">Drop report.json here</span><span className="mt-2 text-sm text-[var(--muted)]">or choose a file</span><input type="file" accept="application/json" className="sr-only" onChange={() => setReport(true)} /></label><div className="border border-[var(--line)] bg-[var(--ink)] p-6"><div className="flex items-center justify-between border-b border-[var(--line)] pb-4"><span className="font-mono text-xs text-[var(--muted)]">REPORT VIEW</span><FileJson className="size-4 text-[var(--muted)]" /></div>{report ? <div className="mt-6"><p className="font-mono text-xs text-[var(--muted)]">DIAGNOSIS</p><p className="mt-2 font-display text-3xl text-[var(--orange)]">thermal_throttling</p><p className="mt-2 font-mono text-sm">confidence <span className="text-[var(--hot)]">0.93</span></p><div className="mt-6"><MiniTrace hot={.85} /></div></div> : <div className="flex h-48 flex-col items-center justify-center text-center"><p className="text-sm text-[var(--muted)]">No report loaded.</p><button onClick={() => setReport(true)} className="mt-4 border border-[var(--hot)] px-4 py-2 text-sm text-[var(--hot)]">Load sample report</button></div>}</div></div></div></section> }
+
+function Architecture() { return <section className="mx-auto max-w-7xl px-5 py-24 md:py-32"><p className="font-mono text-xs text-[var(--muted)]">ARCHITECTURE</p><h2 className="mt-4 max-w-xl font-display text-4xl font-semibold tracking-[-.05em] sm:text-6xl">Evidence stays close to the device.</h2><div className="relative mt-12"><div className="pointer-events-none absolute left-[12%] right-[12%] top-1/2 hidden border-t border-dashed border-[#6c8f86]/70 md:block" /> <div className="grid gap-3 md:grid-cols-4">{[['Python CLI', 'commands + protocol'], ['ADB / LAN', 'samples + controls'], ['Android runner', 'latency + telemetry'], ['report.json', 'static dashboard']].map(([title, note], i) => <div key={title} className="group relative border border-[var(--line)] bg-[var(--surface)] p-5 transition-colors hover:border-[#6c8f86]"><div className="mb-8 flex items-center justify-between font-mono text-xs text-[var(--hot)]"><span>0{i + 1}</span><span className="text-[#6c8f86]">{i === 0 ? 'INPUT' : i === 3 ? 'OUTPUT' : 'TRANSFER'}</span></div><Network className="mb-6 size-6 text-[#6c8f86]" /><h3 className="font-semibold">{title}</h3><p className="mt-2 text-sm text-[var(--muted)]">{note}</p>{i < 3 && <ArrowRight aria-hidden="true" className="absolute -right-5 top-1/2 z-10 hidden size-8 -translate-y-1/2 bg-[var(--ink)] px-1 text-[#6c8f86] md:block" />}</div>)}</div></div></section> }
+
+export default function Page() { return <><Header /><main id="top"><PinnedHero /><Reruns /><Statistics /><section className="mx-auto max-w-7xl px-5 py-24"><div className="terminal-shadow overflow-hidden border border-[var(--line)] bg-[#090711]"><div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-3 font-mono text-xs text-[var(--muted)]"><span>jitter / terminal</span><span>SIMULATED OUTPUT</span></div><pre className="overflow-x-auto p-5 font-mono text-xs leading-7 text-[var(--muted)] sm:p-8 sm:text-sm"><code><span className="text-[var(--text)]">$ jitter diagnose mobilenet_v3.tflite --device pixel-7a</span>{'\n'}[1/4] cold vs warm .......... warmup 6 iters, steady-state from iter 7{'\n'}[2/4] cooldown .............. median 14.1 ms after 240 s rest{'\n'}[3/4] delegate swap ......... requested NNAPI, executed GPU, no fallback{'\n'}[4/4] quiet device .......... noise floor +/- 0.4 ms{'\n\n'}<span className="text-[var(--orange)]">verdict: thermal_throttling</span>   confidence <span className="text-[var(--hot)]">0.93</span>{'\n'}drift: +2.3x over 90 s (95% CI 2.1 to 2.5x)</code></pre></div></section><Dashboard /><Architecture /><section className="border-t border-[var(--line)]"><div className="mx-auto grid max-w-7xl gap-10 px-5 py-24 md:grid-cols-2"><div><p className="font-mono text-xs text-[var(--muted)]">SCOPE / HONEST BY DESIGN</p><h2 className="mt-4 font-display text-4xl font-semibold tracking-[-.05em]">A narrow tool with a clear boundary.</h2></div><div className="grid gap-3 text-sm"><p className="border-l-2 border-[var(--cold)] bg-[var(--surface)] p-4"><strong>In scope:</strong> TFLite and ONNX, Android, CPU/GPU/NNAPI.</p><p className="border-l-2 border-[var(--line)] bg-[var(--surface)] p-4 text-[var(--muted)]"><strong>Out of scope for now:</strong> model conversion, cloud device farms, accounts, iOS.</p></div></div></section></main><footer className="border-t border-[var(--line)]"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 px-5 py-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center"><div className="flex flex-wrap items-center gap-4"><Link href="#top" className="flex items-center gap-2 font-display font-black text-[var(--text)]"><img src="/jitter-logo.png" alt="Jitter" className="size-5 rounded object-contain" /><span>JITTER.</span></Link><span className="font-mono text-xs text-[var(--muted)]">Engineered by <span className="font-semibold text-[var(--text)]">Ayush Dubey</span></span><span className="text-xs text-[var(--muted)]">MIT License (planned)</span></div><div className="flex items-center gap-5"><Link href="/docs" className="hover:text-[var(--text)]">Docs</Link><a href="#dashboard" className="hover:text-[var(--text)]">Dashboard</a><CopyButton /></div></div></footer></> }
