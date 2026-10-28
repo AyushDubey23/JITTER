@@ -1,0 +1,642 @@
+{
+  "schema_version": "0.1.0",
+  "jitter_version": "0.1.0",
+  "created_at": "2026-10-28T15:34:28.007843+00:00",
+  "seed": 92,
+  "source": "synthetic",
+  "model": {
+    "name": "mobilenet_v2.tflite",
+    "sha256": "8f4b23c9a1e0b5d8471c26359048a623910c7320b9e8354c7d2105a2f64b8891",
+    "size_bytes": 14200000
+  },
+  "device": {
+    "model": "Pixel 7",
+    "manufacturer": "Google",
+    "soc": "Tensor G2",
+    "android_api": 34,
+    "runner_version": "0.1.0"
+  },
+  "config": {
+    "warmup_iterations": 5,
+    "measured_iterations": 60,
+    "requested_delegate": "gpu",
+    "input_spec": {
+      "input": [
+        1,
+        224,
+        224,
+        3
+      ]
+    },
+    "rest_policy": {
+      "cooldown_target_c": 32.0,
+      "max_rest_s": 180
+    }
+  },
+  "runs": [
+    {
+      "rerun": "cold_warm",
+      "process_start": "cold",
+      "delegate_requested": "gpu",
+      "delegate_executed": "gpu",
+      "samples_ms": [
+        16.106074008194607,
+        23.2050398808296,
+        28.96172051124426,
+        7.46682105284318,
+        7.1254289746021895,
+        18.2513556663711,
+        12.386792046767171,
+        8.364946760711405,
+        18.51848607780435,
+        18.79654901786983
+      ],
+      "timestamps_ns": [
+        1000000000,
+        1015918321,
+        1031836642,
+        1047754964,
+        1063673285,
+        1079591606,
+        1095509928,
+        1111428249,
+        1127346571,
+        1143264892
+      ],
+      "telemetry": {
+        "thermal_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "thermal_headroom": [
+          0.8332896990829077,
+          0.8332373882542249,
+          0.8331871249825178,
+          0.8331368603670312,
+          0.8330809403751709,
+          0.8330158340471419,
+          0.8329619060200382,
+          0.8329036986925649,
+          0.8328467859573485,
+          0.8327896152822453
+        ],
+        "battery_temp_c": [
+          28.00078541650766,
+          28.001727011423952,
+          28.00263175031468,
+          28.00353651339344,
+          28.004543073246925,
+          28.005714987151446,
+          28.006685691639312,
+          28.007733423533832,
+          28.008757852767726,
+          28.009786924919585
+        ],
+        "charging": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "screen_on": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "notes": [
+        "Synthetic run: cold_warm_fresh"
+      ]
+    },
+    {
+      "rerun": "cold_warm",
+      "process_start": "warm",
+      "delegate_requested": "gpu",
+      "delegate_executed": "gpu",
+      "samples_ms": [
+        13.116269875116842,
+        14.87413135176048,
+        13.309170878315044,
+        16.507233634220242,
+        12.893071743885576,
+        13.21176072655867,
+        12.251979725996678,
+        14.525098470876324,
+        12.535660804684772,
+        13.694934589652418
+      ],
+      "timestamps_ns": [
+        2000000000,
+        2013691931,
+        2027383862,
+        2041075793,
+        2054767724,
+        2068459655,
+        2082151587,
+        2095843518,
+        2109535449,
+        2123227380
+      ],
+      "telemetry": {
+        "thermal_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "thermal_headroom": [
+          0.829798933529688,
+          0.829734611624867,
+          0.8296770583691193,
+          0.8296056768663544,
+          0.8295499251197691,
+          0.8294927962666032,
+          0.8294398185026581,
+          0.8293770127348444,
+          0.8293228102141659,
+          0.8292635961127195
+        ],
+        "battery_temp_c": [
+          28.063619196465616,
+          28.064776990752396,
+          28.065812949355852,
+          28.06709781640562,
+          28.068101347844156,
+          28.069129667201143,
+          28.070083266952153,
+          28.0712137707728,
+          28.072189416145015,
+          28.07325526997105
+        ],
+        "charging": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "screen_on": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "notes": [
+        "Synthetic run: cold_warm_warm"
+      ]
+    },
+    {
+      "rerun": "cooldown",
+      "process_start": "cold",
+      "delegate_requested": "gpu",
+      "delegate_executed": "gpu",
+      "samples_ms": [
+        12.264342007492287,
+        11.596621329878962,
+        11.984485392370868,
+        12.731322501248505,
+        14.873023062809068,
+        11.834900380809813,
+        16.745466311589684,
+        15.665638667704279,
+        15.830850491163458,
+        13.367832309477848
+      ],
+      "timestamps_ns": [
+        3000000000,
+        3013689448,
+        3027378896,
+        3041068344,
+        3054757792,
+        3068447241,
+        3082136689,
+        3095826137,
+        3109515585,
+        3123205034
+      ],
+      "telemetry": {
+        "thermal_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "thermal_headroom": [
+          0.8070200265510405,
+          0.8069702210199,
+          0.8069187504532677,
+          0.8068640732466476,
+          0.8068001991354438,
+          0.8067493736147477,
+          0.8066774605495053,
+          0.8066101862452357,
+          0.8065422038407019,
+          0.8064847995527731
+        ],
+        "battery_temp_c": [
+          28.47363952208127,
+          28.4745360216418,
+          28.47546249184118,
+          28.476446681560343,
+          28.47759641556201,
+          28.47851127493454,
+          28.479805710108906,
+          28.481016647585758,
+          28.482240330867366,
+          28.483273608050084
+        ],
+        "charging": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "screen_on": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "notes": [
+        "Synthetic run: cooldown_rested"
+      ]
+    },
+    {
+      "rerun": "delegate_swap",
+      "process_start": "cold",
+      "delegate_requested": "cpu",
+      "delegate_executed": "cpu",
+      "samples_ms": [
+        37.81468064022313,
+        38.164607259777476,
+        37.23421699416516,
+        37.18218529181534,
+        38.55974729067381,
+        38.107226857297775,
+        37.45725327808654,
+        37.18609286900901,
+        37.96443672372297,
+        37.4985832530448
+      ],
+      "timestamps_ns": [
+        4000000000,
+        4037716903,
+        4075433806,
+        4113150709,
+        4150867612,
+        4188584515,
+        4226301418,
+        4264018321,
+        4301735224,
+        4339452127
+      ],
+      "telemetry": {
+        "thermal_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "thermal_headroom": [
+          0.8063873524674899,
+          0.8062890084636791,
+          0.8061930666802378,
+          0.8060972636002999,
+          0.8059979159116613,
+          0.8058997390410203,
+          0.8058032414940468,
+          0.8057074471719743,
+          0.8056096524975391,
+          0.8055130626031531
+        ],
+        "battery_temp_c": [
+          28.48502765558518,
+          28.486797847653776,
+          28.48852479975572,
+          28.490249255194602,
+          28.4920375135901,
+          28.493804697261634,
+          28.495541653107157,
+          28.497265950904463,
+          28.499026255044296,
+          28.500764873143243
+        ],
+        "charging": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "screen_on": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "notes": [
+        "Synthetic run: delegate_cpu"
+      ]
+    },
+    {
+      "rerun": "quiet_device",
+      "process_start": "cold",
+      "delegate_requested": "gpu",
+      "delegate_executed": "gpu",
+      "samples_ms": [
+        12.878146842183897,
+        13.340065027655056,
+        13.596576843282648,
+        14.583675160654169,
+        13.535853314361766,
+        14.1313138043202,
+        12.856415659076179,
+        13.342217705445355,
+        12.97384019618464,
+        13.38363841693186
+      ],
+      "timestamps_ns": [
+        5000000000,
+        5013462174,
+        5026924348,
+        5040386522,
+        5053848697,
+        5067310871,
+        5080773045,
+        5094235220,
+        5107697394,
+        5121159568
+      ],
+      "telemetry": {
+        "thermal_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "thermal_headroom": [
+          0.8054577783400246,
+          0.8054005120780646,
+          0.8053421456727915,
+          0.8052795430284443,
+          0.8052214394192787,
+          0.8051607808201187,
+          0.8051055957281468,
+          0.8050483263276303,
+          0.8049926390953881,
+          0.8049351938662294
+        ],
+        "battery_temp_c": [
+          28.501759989879556,
+          28.502790782594836,
+          28.503841377889753,
+          28.504968225488003,
+          28.506014090452982,
+          28.507105945237864,
+          28.508099276893358,
+          28.509130126102654,
+          28.510132496283013,
+          28.51116651040787
+        ],
+        "charging": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "screen_on": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "notes": [
+        "Synthetic run: quiet_device"
+      ]
+    }
+  ],
+  "diagnosis": {
+    "primary": "inconclusive",
+    "secondary": [],
+    "confidence": 0.28,
+    "evidence": [
+      {
+        "rule_id": "min_effective_sample_size",
+        "observed_value": 8.3,
+        "threshold": 30.0,
+        "passed": false,
+        "plain_language": "Effective sample size (8.3) below minimum 30 required for conclusive diagnosis."
+      }
+    ],
+    "inconclusive_reason": "Overwhelming random variance across test runs masked systematic signal (n_eff < 30)."
+  },
+  "statistics": {
+    "per_run": {
+      "fresh": {
+        "n": 10,
+        "n_eff": 8.331763020076764,
+        "median": 17.178714837282854,
+        "p95": 26.371214227557655,
+        "p99": 28.44361925450694,
+        "mad": 8.019567119390477,
+        "ci_lower": 7.915883906777292,
+        "ci_upper": 21.000794449349712,
+        "method": "moving_block_percentile"
+      },
+      "warm": {
+        "n": 10,
+        "n_eff": 10.0,
+        "median": 13.260465802436856,
+        "p95": 15.772337607113348,
+        "p99": 16.360254428798864,
+        "mad": 0.8593696567965154,
+        "ci_lower": 12.893071743885576,
+        "ci_upper": 14.110016530264371,
+        "method": "moving_block_percentile"
+      },
+      "cooldown": {
+        "n": 10,
+        "n_eff": 5.18423021812201,
+        "median": 13.049577405363177,
+        "p95": 16.33388919239788,
+        "p99": 16.663150887751325,
+        "mad": 1.977516417057857,
+        "ci_lower": 11.984485392370868,
+        "ci_upper": 15.74824457943387,
+        "method": "moving_block_percentile"
+      },
+      "cpu": {
+        "n": 10,
+        "n_eff": 10.0,
+        "median": 37.656631946633965,
+        "p95": 38.38193427677046,
+        "p99": 38.52418468789314,
+        "mad": 0.647162211540208,
+        "ci_lower": 37.23421699416516,
+        "ci_upper": 38.107226857297775,
+        "method": "moving_block_percentile"
+      },
+      "quiet": {
+        "n": 10,
+        "n_eff": 9.301269992732927,
+        "median": 13.362928061188608,
+        "p95": 14.380112550303883,
+        "p99": 14.542962638584111,
+        "mad": 0.46163467649375384,
+        "ci_lower": 12.925993519184267,
+        "ci_upper": 13.596576843282648,
+        "method": "bca"
+      }
+    },
+    "comparisons": [
+      {
+        "run_a": "fresh",
+        "run_b": "warm",
+        "diff_estimate": -3.101403198693398,
+        "p_value": 0.004975124378109453,
+        "ci_lower": -7.310681906089011,
+        "ci_upper": 5.335174727000695,
+        "effect_size": -0.2,
+        "effect_magnitude": "small",
+        "method": "block_permutation_test"
+      },
+      {
+        "run_a": "cooldown",
+        "run_b": "fresh",
+        "diff_estimate": 2.712938642678826,
+        "p_value": 0.004975124378109453,
+        "ci_lower": -4.807676325143859,
+        "ci_upper": 6.534000685433483,
+        "effect_size": 0.26,
+        "effect_magnitude": "small",
+        "method": "block_permutation_test"
+      },
+      {
+        "run_a": "fresh",
+        "run_b": "cpu",
+        "diff_estimate": 20.69225145396172,
+        "p_value": 0.13432835820895522,
+        "ci_lower": 16.847114608034197,
+        "ci_upper": 29.562550983475354,
+        "effect_size": 1.0,
+        "effect_magnitude": "large",
+        "method": "block_permutation_test"
+      },
+      {
+        "run_a": "quiet",
+        "run_b": "fresh",
+        "diff_estimate": 3.4586694274176804,
+        "p_value": 0.004975124378109453,
+        "ci_lower": -5.425257459772913,
+        "ci_upper": 5.567017044677763,
+        "effect_size": 0.2,
+        "effect_magnitude": "small",
+        "method": "block_permutation_test"
+      }
+    ]
+  },
+  "truth": {
+    "true_label": "inconclusive",
+    "injected_parameters": {
+      "scenario": "inconclusive",
+      "iterations": 60,
+      "seed": 92,
+      "inconclusive_reason": "Severe noise and low sample size"
+    }
+  }
+}
