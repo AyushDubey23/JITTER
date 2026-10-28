@@ -1,0 +1,168 @@
+{
+  "$defs": {
+    "RunnerCapabilities": {
+      "additionalProperties": false,
+      "description": "Hardware and engine features exposed by the runner.",
+      "properties": {
+        "can_control_screen": {
+          "default": false,
+          "description": "Whether runner can toggle display state",
+          "title": "Can Control Screen",
+          "type": "boolean"
+        },
+        "can_measure_headroom": {
+          "default": false,
+          "description": "Whether getThermalHeadroom is available",
+          "title": "Can Measure Headroom",
+          "type": "boolean"
+        },
+        "min_battery_pct": {
+          "default": 15.0,
+          "description": "Minimum battery level required to initiate runs",
+          "title": "Min Battery Pct",
+          "type": "number"
+        },
+        "safety_temp_ceiling_c": {
+          "default": 45.0,
+          "description": "Hard thermal cutoff threshold",
+          "title": "Safety Temp Ceiling C",
+          "type": "number"
+        },
+        "supported_delegates": {
+          "description": "List of supported delegate names",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Supported Delegates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "supported_delegates"
+      ],
+      "title": "RunnerCapabilities",
+      "type": "object"
+    },
+    "TelemetrySnapshot": {
+      "additionalProperties": false,
+      "description": "Instantaneous snapshot of device physical metrics.",
+      "properties": {
+        "battery_pct": {
+          "description": "Battery state of charge (percentage)",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "title": "Battery Pct",
+          "type": "number"
+        },
+        "battery_temp_c": {
+          "description": "Battery temperature in degrees Celsius",
+          "title": "Battery Temp C",
+          "type": "number"
+        },
+        "charging": {
+          "description": "Whether device is actively charging",
+          "title": "Charging",
+          "type": "boolean"
+        },
+        "screen_on": {
+          "description": "Whether screen is currently on",
+          "title": "Screen On",
+          "type": "boolean"
+        },
+        "thermal_headroom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Thermal headroom forecast",
+          "title": "Thermal Headroom"
+        },
+        "thermal_status": {
+          "description": "PowerManager thermal status",
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Thermal Status",
+          "type": "integer"
+        },
+        "timestamp_ns": {
+          "description": "Monotonic timestamp in nanoseconds",
+          "title": "Timestamp Ns",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "timestamp_ns",
+        "thermal_status",
+        "battery_temp_c",
+        "battery_pct",
+        "charging",
+        "screen_on"
+      ],
+      "title": "TelemetrySnapshot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Response payload for GET /v1/info.",
+  "properties": {
+    "android_api": {
+      "description": "Android SDK level",
+      "minimum": 21,
+      "title": "Android Api",
+      "type": "integer"
+    },
+    "capabilities": {
+      "$ref": "#/$defs/RunnerCapabilities"
+    },
+    "current_telemetry": {
+      "$ref": "#/$defs/TelemetrySnapshot"
+    },
+    "device_model": {
+      "description": "Device marketing model",
+      "minLength": 1,
+      "title": "Device Model",
+      "type": "string"
+    },
+    "manufacturer": {
+      "description": "Device manufacturer",
+      "minLength": 1,
+      "title": "Manufacturer",
+      "type": "string"
+    },
+    "runner_version": {
+      "description": "Runner software version",
+      "minLength": 1,
+      "title": "Runner Version",
+      "type": "string"
+    },
+    "soc": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SoC name if identifiable",
+      "title": "Soc"
+    }
+  },
+  "required": [
+    "runner_version",
+    "device_model",
+    "manufacturer",
+    "android_api",
+    "capabilities",
+    "current_telemetry"
+  ],
+  "title": "RunnerInfoResponse",
+  "type": "object"
+}

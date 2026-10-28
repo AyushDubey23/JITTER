@@ -1,11 +1,11 @@
 # Project Status: Jitter
 
-Last Updated: Phase 0 (Scaffold)
+Last Updated: Phase 1 (Schema and Report I/O)
 
 ## Phase Checklist
 
 - [x] **Phase 0: Scaffold**: Repo layout, pyproject.toml with Hatchling, strict mypy/ruff, CI skeleton, PyPI name verification, STATUS.md.
-- [ ] **Phase 1: Schema and Report I/O**: Pydantic models for Report, JSON Schema export, round-trip validation, `jitter schema` CLI command.
+- [x] **Phase 1: Schema and Report I/O**: Pydantic models for Report, JSON Schema export, round-trip validation, wire protocol v1 schemas, `jitter schema` CLI command.
 - [ ] **Phase 2: Statistics Core**: Summary, autocorrelation, warmup detection, trend drift, bootstrap CI, pairwise comparisons, outlier detection.
 - [ ] **Phase 3: Synthetic Generators & `jitter simulate`**: Physics-based thermal RC model, delegate latency & fallback profiles, Poisson-Pareto noise bursts, multi-fault scenarios.
 - [ ] **Phase 4: Runners & The Four Reruns**: SyntheticRunner, DesktopOnnxRunner, 4 controlled reruns (`cold_warm`, `cooldown`, `delegate_swap`, `quiet_device`), orchestrator pipeline.

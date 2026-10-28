@@ -1,0 +1,737 @@
+{
+  "$defs": {
+    "BenchmarkConfig": {
+      "additionalProperties": false,
+      "description": "Execution configuration applied across reruns.",
+      "properties": {
+        "input_spec": {
+          "additionalProperties": true,
+          "description": "Input tensor shapes and types",
+          "title": "Input Spec",
+          "type": "object"
+        },
+        "measured_iterations": {
+          "description": "Iterations recorded per run",
+          "minimum": 1,
+          "title": "Measured Iterations",
+          "type": "integer"
+        },
+        "requested_delegate": {
+          "description": "Primary requested delegate",
+          "minLength": 1,
+          "title": "Requested Delegate",
+          "type": "string"
+        },
+        "rest_policy": {
+          "additionalProperties": true,
+          "description": "Conditions for thermal cooldown and stabilization",
+          "title": "Rest Policy",
+          "type": "object"
+        },
+        "warmup_iterations": {
+          "description": "Iterations before recording steady state",
+          "minimum": 0,
+          "title": "Warmup Iterations",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "warmup_iterations",
+        "measured_iterations",
+        "requested_delegate"
+      ],
+      "title": "BenchmarkConfig",
+      "type": "object"
+    },
+    "DeviceInfo": {
+      "additionalProperties": false,
+      "description": "Specifications of the target hardware device.",
+      "properties": {
+        "android_api": {
+          "anyOf": [
+            {
+              "minimum": 21,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Android API level (SDK version)",
+          "title": "Android Api"
+        },
+        "manufacturer": {
+          "description": "Hardware manufacturer (e.g., Google)",
+          "minLength": 1,
+          "title": "Manufacturer",
+          "type": "string"
+        },
+        "model": {
+          "description": "Device marketing model (e.g., Pixel 7a)",
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "runner_version": {
+          "description": "Version of the executing runner",
+          "minLength": 1,
+          "title": "Runner Version",
+          "type": "string"
+        },
+        "soc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "System on Chip identifier (e.g., Tensor G2)",
+          "title": "Soc"
+        }
+      },
+      "required": [
+        "model",
+        "manufacturer",
+        "runner_version"
+      ],
+      "title": "DeviceInfo",
+      "type": "object"
+    },
+    "Diagnosis": {
+      "additionalProperties": false,
+      "description": "Root-cause classification with supporting evidence and confidence.",
+      "properties": {
+        "confidence": {
+          "description": "Confidence score from 0.0 to 1.0",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "description": "Detailed rule evaluations",
+          "items": {
+            "$ref": "#/$defs/EvidenceItem"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "inconclusive_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Detailed explanation if verdict is inconclusive",
+          "title": "Inconclusive Reason"
+        },
+        "primary": {
+          "$ref": "#/$defs/DiagnosisLabel",
+          "description": "Primary identified cause"
+        },
+        "secondary": {
+          "description": "Secondary or co-occurring causes",
+          "items": {
+            "$ref": "#/$defs/DiagnosisLabel"
+          },
+          "title": "Secondary",
+          "type": "array"
+        }
+      },
+      "required": [
+        "primary",
+        "confidence"
+      ],
+      "title": "Diagnosis",
+      "type": "object"
+    },
+    "DiagnosisLabel": {
+      "description": "Closed set of diagnosis outcomes.",
+      "enum": [
+        "warmup_drift",
+        "thermal_throttling",
+        "delegate_fallback",
+        "background_noise",
+        "regression",
+        "inconclusive"
+      ],
+      "title": "DiagnosisLabel",
+      "type": "string"
+    },
+    "EvidenceItem": {
+      "additionalProperties": false,
+      "description": "Single rule evaluation detail contributing to a diagnosis.",
+      "properties": {
+        "observed_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "description": "Value measured from run evidence",
+          "title": "Observed Value"
+        },
+        "passed": {
+          "description": "Whether condition signature was satisfied",
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "plain_language": {
+          "description": "Human-readable explanation of the evidence",
+          "minLength": 1,
+          "title": "Plain Language",
+          "type": "string"
+        },
+        "rule_id": {
+          "description": "Unique identifier of the rule",
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "description": "Decision threshold applied",
+          "title": "Threshold"
+        }
+      },
+      "required": [
+        "rule_id",
+        "observed_value",
+        "threshold",
+        "passed",
+        "plain_language"
+      ],
+      "title": "EvidenceItem",
+      "type": "object"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Metadata describing the evaluated ML model.",
+      "properties": {
+        "name": {
+          "description": "Model file name or identifier",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "SHA256 hex digest of model artifact",
+          "maxLength": 64,
+          "minLength": 64,
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "description": "File size in bytes",
+          "minimum": 1,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "sha256",
+        "size_bytes"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "PairwiseComparison": {
+      "additionalProperties": false,
+      "description": "Statistical hypothesis test comparing two benchmark reruns.",
+      "properties": {
+        "ci_lower": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Lower confidence bound on shift",
+          "title": "Ci Lower"
+        },
+        "ci_upper": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Upper confidence bound on shift",
+          "title": "Ci Upper"
+        },
+        "diff_estimate": {
+          "description": "Difference or shift estimate (e.g. Hodges-Lehmann)",
+          "title": "Diff Estimate",
+          "type": "number"
+        },
+        "effect_magnitude": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Qualitative magnitude: negligible, small, medium, large",
+          "title": "Effect Magnitude"
+        },
+        "effect_size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Effect size metric (e.g., Cliff's delta)",
+          "title": "Effect Size"
+        },
+        "method": {
+          "description": "Test name and methodology applied",
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "p_value": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hypothesis test p-value",
+          "title": "P Value"
+        },
+        "run_a": {
+          "description": "Identifier of reference rerun",
+          "minLength": 1,
+          "title": "Run A",
+          "type": "string"
+        },
+        "run_b": {
+          "description": "Identifier of comparison rerun",
+          "minLength": 1,
+          "title": "Run B",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_a",
+        "run_b",
+        "diff_estimate",
+        "method"
+      ],
+      "title": "PairwiseComparison",
+      "type": "object"
+    },
+    "ProcessStart": {
+      "description": "Process execution mode.",
+      "enum": [
+        "cold",
+        "warm"
+      ],
+      "title": "ProcessStart",
+      "type": "string"
+    },
+    "ReportStatistics": {
+      "additionalProperties": false,
+      "description": "Aggregated statistics across individual runs and pairwise comparisons.",
+      "properties": {
+        "comparisons": {
+          "description": "Pairwise statistical comparisons between runs",
+          "items": {
+            "$ref": "#/$defs/PairwiseComparison"
+          },
+          "title": "Comparisons",
+          "type": "array"
+        },
+        "per_run": {
+          "additionalProperties": {
+            "$ref": "#/$defs/RunStatistics"
+          },
+          "description": "Statistical summary mapped by run identifier",
+          "title": "Per Run",
+          "type": "object"
+        }
+      },
+      "required": [
+        "per_run"
+      ],
+      "title": "ReportStatistics",
+      "type": "object"
+    },
+    "RerunType": {
+      "description": "The four controlled rerun conditions.",
+      "enum": [
+        "cold_warm",
+        "cooldown",
+        "delegate_swap",
+        "quiet_device"
+      ],
+      "title": "RerunType",
+      "type": "string"
+    },
+    "RunEntry": {
+      "additionalProperties": false,
+      "description": "A single execution record of a controlled benchmark rerun.",
+      "properties": {
+        "delegate_executed": {
+          "description": "Delegate actually executed by runner",
+          "minLength": 1,
+          "title": "Delegate Executed",
+          "type": "string"
+        },
+        "delegate_requested": {
+          "description": "Delegate requested by caller",
+          "minLength": 1,
+          "title": "Delegate Requested",
+          "type": "string"
+        },
+        "notes": {
+          "description": "Descriptive notes or warnings",
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "process_start": {
+          "$ref": "#/$defs/ProcessStart",
+          "description": "Whether run was executed in a fresh process"
+        },
+        "rerun": {
+          "$ref": "#/$defs/RerunType",
+          "description": "The controlled rerun category"
+        },
+        "samples_ms": {
+          "description": "Per-iteration latency in milliseconds",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1,
+          "title": "Samples Ms",
+          "type": "array"
+        },
+        "telemetry": {
+          "$ref": "#/$defs/TelemetrySeries",
+          "description": "Aligned device telemetry series"
+        },
+        "timestamps_ns": {
+          "description": "Monotonic timestamp in nanoseconds for each sample",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Timestamps Ns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rerun",
+        "process_start",
+        "delegate_requested",
+        "delegate_executed",
+        "samples_ms",
+        "timestamps_ns",
+        "telemetry"
+      ],
+      "title": "RunEntry",
+      "type": "object"
+    },
+    "RunStatistics": {
+      "additionalProperties": false,
+      "description": "Robust statistical summary of a single rerun.",
+      "properties": {
+        "ci_lower": {
+          "description": "Lower bound of median confidence interval",
+          "exclusiveMinimum": 0.0,
+          "title": "Ci Lower",
+          "type": "number"
+        },
+        "ci_upper": {
+          "description": "Upper bound of median confidence interval",
+          "exclusiveMinimum": 0.0,
+          "title": "Ci Upper",
+          "type": "number"
+        },
+        "mad": {
+          "description": "Median absolute deviation scaled by 1.4826",
+          "minimum": 0.0,
+          "title": "Mad",
+          "type": "number"
+        },
+        "median": {
+          "description": "Sample median in milliseconds",
+          "exclusiveMinimum": 0.0,
+          "title": "Median",
+          "type": "number"
+        },
+        "method": {
+          "description": "Method used for confidence interval estimation",
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "n": {
+          "description": "Total sample count",
+          "minimum": 1,
+          "title": "N",
+          "type": "integer"
+        },
+        "n_eff": {
+          "description": "Effective sample size accounting for autocorrelation",
+          "minimum": 0.0,
+          "title": "N Eff",
+          "type": "number"
+        },
+        "p95": {
+          "description": "95th percentile latency in milliseconds",
+          "exclusiveMinimum": 0.0,
+          "title": "P95",
+          "type": "number"
+        },
+        "p99": {
+          "description": "99th percentile latency in milliseconds",
+          "exclusiveMinimum": 0.0,
+          "title": "P99",
+          "type": "number"
+        }
+      },
+      "required": [
+        "n",
+        "n_eff",
+        "median",
+        "p95",
+        "p99",
+        "mad",
+        "ci_lower",
+        "ci_upper",
+        "method"
+      ],
+      "title": "RunStatistics",
+      "type": "object"
+    },
+    "SyntheticTruth": {
+      "additionalProperties": true,
+      "description": "Ground truth side-channel for synthetic fault injection; ignored by diagnosis.",
+      "properties": {
+        "injected_parameters": {
+          "additionalProperties": true,
+          "title": "Injected Parameters",
+          "type": "object"
+        },
+        "true_label": {
+          "$ref": "#/$defs/DiagnosisLabel"
+        }
+      },
+      "required": [
+        "true_label"
+      ],
+      "title": "SyntheticTruth",
+      "type": "object"
+    },
+    "TelemetrySeries": {
+      "additionalProperties": false,
+      "description": "Synchronized time series of device state during a run.",
+      "properties": {
+        "battery_temp_c": {
+          "description": "Battery temperature in degrees Celsius",
+          "items": {
+            "type": "number"
+          },
+          "title": "Battery Temp C",
+          "type": "array"
+        },
+        "charging": {
+          "description": "Whether device is actively charging",
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Charging",
+          "type": "array"
+        },
+        "screen_on": {
+          "description": "Whether screen is on",
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Screen On",
+          "type": "array"
+        },
+        "thermal_headroom": {
+          "description": "Thermal headroom forecast (floating point or null if unsupported)",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Thermal Headroom",
+          "type": "array"
+        },
+        "thermal_status": {
+          "description": "PowerManager thermal status (0=NONE, 1=LIGHT, 2=MODERATE, 3=SEVERE, 4=CRITICAL, 5=EMERGENCY, 6=SHUTDOWN)",
+          "items": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Thermal Status",
+          "type": "array"
+        }
+      },
+      "required": [
+        "thermal_status",
+        "thermal_headroom",
+        "battery_temp_c",
+        "charging",
+        "screen_on"
+      ],
+      "title": "TelemetrySeries",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Canonical Jitter Diagnostic Report (v0.1).",
+  "properties": {
+    "config": {
+      "$ref": "#/$defs/BenchmarkConfig"
+    },
+    "created_at": {
+      "description": "UTC ISO 8601 creation timestamp",
+      "title": "Created At",
+      "type": "string"
+    },
+    "device": {
+      "$ref": "#/$defs/DeviceInfo"
+    },
+    "diagnosis": {
+      "$ref": "#/$defs/Diagnosis"
+    },
+    "jitter_version": {
+      "description": "Version of Jitter library that produced this report",
+      "minLength": 1,
+      "title": "Jitter Version",
+      "type": "string"
+    },
+    "model": {
+      "$ref": "#/$defs/ModelInfo"
+    },
+    "runs": {
+      "description": "Ordered set of controlled reruns",
+      "items": {
+        "$ref": "#/$defs/RunEntry"
+      },
+      "minItems": 1,
+      "title": "Runs",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.1.0",
+      "description": "Semver format of report schema",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "PRNG seed for reproducible generation",
+      "title": "Seed"
+    },
+    "source": {
+      "description": "Provenance origin of benchmark data",
+      "enum": [
+        "device",
+        "desktop",
+        "synthetic"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "statistics": {
+      "$ref": "#/$defs/ReportStatistics"
+    },
+    "truth": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SyntheticTruth"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Synthetic ground truth side-channel; strictly ignored by diagnosis engine"
+    }
+  },
+  "required": [
+    "jitter_version",
+    "created_at",
+    "source",
+    "model",
+    "device",
+    "config",
+    "runs",
+    "diagnosis",
+    "statistics"
+  ],
+  "title": "Report",
+  "type": "object"
+}
