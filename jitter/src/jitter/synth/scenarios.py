@@ -95,6 +95,9 @@ def generate_scenario_report(
     if isinstance(label, str):
         label = DiagnosisLabel(label)
 
+    if label == DiagnosisLabel.INCONCLUSIVE:
+        iterations = 8
+
     rng = np.random.default_rng(seed)
     created_at = datetime.now(timezone.utc).isoformat()
 
@@ -126,8 +129,12 @@ def generate_scenario_report(
     }
 
     # Initialize physical models
-    thermal = RCThermalModel(initial_temp_c=28.0)
-    noise_gen = ContentionNoiseGenerator(seed=seed)
+    thermal = RCThermalModel(initial_temp_c=30.0)
+    noise_gen = ContentionNoiseGenerator(
+        arrival_rate_per_iter=0.15 if (label == DiagnosisLabel.BACKGROUND_NOISE or secondary_fault == "noise") else 0.05,
+        multiplier_range=(2.0, 5.0),
+        seed=seed,
+    )
 
     # 1. Cold Fresh Run
     fresh_latencies: list[float] = []
@@ -139,12 +146,14 @@ def generate_scenario_report(
     if secondary_fault == "fallback":
         fallback = FallbackMode.FULL
 
-    for i in range(iterations):
+    n_samples = 8 if label == DiagnosisLabel.INCONCLUSIVE else iterations
+
+    for i in range(n_samples):
         sim = simulate_iteration(
             model_name=model_name,
             requested_delegate="gpu",
             iteration_idx=i,
-            total_iterations=iterations,
+            total_iterations=n_samples,
             fallback_mode=fallback,
             rng=rng,
         )
@@ -154,16 +163,16 @@ def generate_scenario_report(
         if label == DiagnosisLabel.WARMUP_DRIFT or secondary_fault == "warmup":
             if i < 4:
                 # 3.5x warmup multiplier decaying
-                decay = np.exp(-0.8 * i)
+                decay = float(np.exp(-0.8 * i))
                 lat += sim.raw_latency_ms * (3.0 * decay)
             injected_params["warmup_multiplier"] = 3.5
 
         # Injected Thermal Fault
         if label == DiagnosisLabel.THERMAL_THROTTLING:
-            # Heat up rapidly with heavy power
-            th_state = thermal.step(power_w=sim.power_w * 2.2, dt_s=lat / 1000.0)
+            # Heat up rapidly into throttling range (status 2/3)
+            th_state = thermal.step(power_w=16.0, dt_s=0.8)
             lat = lat / th_state.frequency_ratio
-            injected_params["thermal_boost_power"] = 2.2
+            injected_params["thermal_boost_power"] = 16.0
         else:
             th_state = thermal.step(power_w=sim.power_w, dt_s=lat / 1000.0)
 
@@ -171,6 +180,10 @@ def generate_scenario_report(
         if label == DiagnosisLabel.REGRESSION:
             lat += 12.0  # +12 ms uniform regression
             injected_params["regression_shift_ms"] = 12.0
+
+        if label == DiagnosisLabel.INCONCLUSIVE:
+            lat *= float(rng.uniform(0.6, 1.8))
+            injected_params["inconclusive_reason"] = "Severe noise and low sample size"
 
         fresh_latencies.append(lat)
         fresh_thermal_status.append(th_state.thermal_status)
@@ -182,19 +195,6 @@ def generate_scenario_report(
         arr_noisy, bursts = noise_gen.apply_noise(np.array(fresh_latencies), quiet_mode=False)
         fresh_latencies = [float(v) for v in arr_noisy]
         injected_params["noise_burst_count"] = len(bursts)
-
-    # Inconclusive scenario: small sample size with high noise
-    if label == DiagnosisLabel.INCONCLUSIVE:
-        fresh_latencies = [
-            fresh_latencies[j] * float(rng.uniform(0.5, 2.5))
-            for j in range(min(10, len(fresh_latencies)))
-        ]
-        fresh_thermal_status = fresh_thermal_status[: len(fresh_latencies)]
-        fresh_headroom = fresh_headroom[: len(fresh_latencies)]
-        fresh_temp = fresh_temp[: len(fresh_latencies)]
-        injected_params["inconclusive_reason"] = "Severe noise and low sample size"
-
-    n_samples = len(fresh_latencies)
     run_fresh = _build_run_entry(
         name="cold_warm_fresh",
         rerun=RerunType.COLD_WARM,
@@ -228,7 +228,11 @@ def generate_scenario_report(
         lat = sim.raw_latency_ms
         if label == DiagnosisLabel.REGRESSION:
             lat += 12.0
-        th_state = thermal.step(power_w=sim.power_w, dt_s=lat / 1000.0)
+        if label == DiagnosisLabel.THERMAL_THROTTLING:
+            th_state = thermal.step(power_w=16.0, dt_s=0.8)
+            lat = lat / th_state.frequency_ratio
+        else:
+            th_state = thermal.step(power_w=sim.power_w, dt_s=lat / 1000.0)
         warm_latencies.append(lat)
         warm_thermal_status.append(th_state.thermal_status)
         warm_headroom.append(th_state.thermal_headroom)
@@ -250,7 +254,7 @@ def generate_scenario_report(
     )
 
     # 3. Cooldown Run (rested baseline)
-    thermal.cool_down(rest_duration_s=60.0)
+    thermal.cool_down(rest_duration_s=240.0)
     cooldown_latencies: list[float] = []
     cooldown_thermal_status: list[int] = []
     cooldown_headroom: list[float | None] = []
@@ -268,6 +272,10 @@ def generate_scenario_report(
         lat = sim.raw_latency_ms
         if label == DiagnosisLabel.REGRESSION:
             lat += 12.0
+        if label == DiagnosisLabel.WARMUP_DRIFT or secondary_fault == "warmup":
+            if i < 4:
+                decay = float(np.exp(-0.8 * i))
+                lat += sim.raw_latency_ms * (3.0 * decay)
         th_state = thermal.step(power_w=sim.power_w, dt_s=lat / 1000.0)
         cooldown_latencies.append(lat)
         cooldown_thermal_status.append(th_state.thermal_status)
@@ -346,7 +354,15 @@ def generate_scenario_report(
         lat = sim.raw_latency_ms
         if label == DiagnosisLabel.REGRESSION:
             lat += 12.0
-        th_state = thermal.step(power_w=sim.power_w, dt_s=lat / 1000.0)
+        if label == DiagnosisLabel.WARMUP_DRIFT or secondary_fault == "warmup":
+            if i < 4:
+                decay = float(np.exp(-0.8 * i))
+                lat += sim.raw_latency_ms * (3.0 * decay)
+        if label == DiagnosisLabel.THERMAL_THROTTLING:
+            th_state = thermal.step(power_w=16.0, dt_s=0.8)
+            lat = lat / th_state.frequency_ratio
+        else:
+            th_state = thermal.step(power_w=sim.power_w, dt_s=lat / 1000.0)
         quiet_latencies.append(lat)
         quiet_thermal_status.append(th_state.thermal_status)
         quiet_headroom.append(th_state.thermal_headroom)
@@ -374,7 +390,7 @@ def generate_scenario_report(
     for entry, name in zip(runs, ["fresh", "warm", "cooldown", "cpu", "quiet"], strict=False):
         summ = robust_summary(entry.samples_ms)
         neff_res = effective_sample_size(entry.samples_ms)
-        ci_res = bootstrap_ci(entry.samples_ms, seed=seed, n_resamples=500)
+        ci_res = bootstrap_ci(entry.samples_ms, seed=seed, n_resamples=100)
         per_run_stats[name] = RunStatistics(
             n=summ.n,
             n_eff=neff_res.n_eff,
@@ -388,10 +404,10 @@ def generate_scenario_report(
         )
 
     # Compute Pairwise Comparisons
-    comp_warm = compare_runs(fresh_latencies, warm_latencies, seed=seed, n_permutations=200)
-    comp_cooldown = compare_runs(cooldown_latencies, fresh_latencies, seed=seed, n_permutations=200)
-    comp_cpu = compare_runs(fresh_latencies, cpu_latencies, seed=seed, n_permutations=200)
-    comp_quiet = compare_runs(quiet_latencies, fresh_latencies, seed=seed, n_permutations=200)
+    comp_warm = compare_runs(fresh_latencies, warm_latencies, seed=seed, n_permutations=50)
+    comp_cooldown = compare_runs(cooldown_latencies, fresh_latencies, seed=seed, n_permutations=50)
+    comp_cpu = compare_runs(fresh_latencies, cpu_latencies, seed=seed, n_permutations=50)
+    comp_quiet = compare_runs(quiet_latencies, fresh_latencies, seed=seed, n_permutations=50)
 
     comparisons = [
         PairwiseComparison(

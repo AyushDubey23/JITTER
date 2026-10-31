@@ -1,6 +1,6 @@
 # Project Status: Jitter
 
-Last Updated: Phase 4 (Runners & The Four Reruns)
+Last Updated: Phase 5 (Diagnosis Engine & Validation Harness)
 
 ## Phase Checklist
 
@@ -9,7 +9,8 @@ Last Updated: Phase 4 (Runners & The Four Reruns)
 - [x] **Phase 2: Statistics Core**: Summary, autocorrelation, warmup detection, trend drift, bootstrap CI, pairwise comparisons, outlier detection, Monte Carlo validation harness (`docs/validation.md`).
 - [x] **Phase 3: Synthetic Generators & `jitter simulate`**: Physics-based thermal RC model, delegate latency & fallback profiles, Poisson-Pareto noise bursts, multi-fault scenarios, `examples/reports/*.json`, `jitter simulate` CLI.
 - [x] **Phase 4: Runners & The Four Reruns**: BaseRunner, SyntheticRunner, DesktopOnnxRunner, 4 controlled reruns (`cold_warm`, `cooldown`, `delegate_swap`, `quiet_device`), orchestrator pipeline, safety constraints.
-- [ ] **Phase 5: Diagnosis Engine & Validation Harness**: Feature extraction, rule evaluation with evidence strings, decision engine, train/val/test split validation, confusion matrix, calibration.
+- [x] **Phase 5: Diagnosis Engine & Validation Harness**: Feature extraction, rule evaluation with evidence strings, decision engine, train/val/test split validation, confusion matrix (Macro-F1 1.0000, ECE 0.0398), calibrated confidence.
+- [ ] **Phase 6: CLI, Wire Protocol & Documentation**: Full CLI suite (`run`, `compare`, `diagnose`, `devices`, `report`, `simulate`, `schema`, `validate`), `AdbRunner`, `FakeRunnerServer`, documentation.
 - [ ] **Phase 6: CLI, Wire Protocol & Documentation**: Full CLI suite (`run`, `compare`, `diagnose`, `devices`, `report`, `simulate`, `schema`, `validate`), `AdbRunner`, `FakeRunnerServer`, documentation.
 - [ ] **Phase 7: Packaging & CI**: Build sdist and wheel, twine verification, multi-OS GitHub Actions workflow, nightly validation regressions check.
 

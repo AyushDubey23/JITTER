@@ -97,7 +97,7 @@ class RCThermalModel:
         # T_{t+1} = T_t + (dt / (R * C)) * (T_amb - T_t) + (P * dt / C)
         cooling = (dt_s / (self.r * self.c)) * (self.ambient_temp_c - self.current_temp_c)
         heating = (power_w * dt_s) / self.c
-        self.current_temp_c += cooling + heating
+        self.current_temp_c = float(np.clip(self.current_temp_c + cooling + heating, -20.0, 52.0))
 
         status = temperature_to_thermal_status(self.current_temp_c)
         freq_ratio = thermal_status_to_frequency_ratio(status)
