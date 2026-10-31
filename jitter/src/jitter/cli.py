@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -36,6 +36,7 @@ schema_app = typer.Typer(name="schema", help="Inspect and export JSON Schemas.")
 app.add_typer(schema_app, name="schema")
 
 console = Console()
+console_err = Console(stderr=True)
 
 
 @app.callback()
@@ -94,7 +95,9 @@ def devices(
 
     if not devs:
         console.print("[yellow]No Android devices detected via ADB.[/yellow]")
-        console.print("[dim]Ensure USB Debugging is enabled on your phone and run 'adb devices'.[/dim]")
+        console.print(
+            "[dim]Ensure USB Debugging is enabled on your phone and run 'adb devices'.[/dim]"
+        )
         return
 
     table = Table(title="Connected Android Devices", title_style="bold cyan")
@@ -112,7 +115,9 @@ def devices(
         bat_str = f"{d.battery_pct:.0f}%"
         temp_str = f"{d.battery_temp_c:.1f}°C"
         status_text = (
-            Text("READY", style="bold green") if d.is_ready else Text(", ".join(d.readiness_notes), style="bold yellow")
+            Text("READY", style="bold green")
+            if d.is_ready
+            else Text(", ".join(d.readiness_notes), style="bold yellow")
         )
         table.add_row(
             d.serial,
@@ -133,7 +138,9 @@ def devices(
 def run_benchmark(
     model: Annotated[
         str,
-        typer.Option("--model", "-m", help="Model catalog name (mobilenet_v2, resnet50) or file path"),
+        typer.Option(
+            "--model", "-m", help="Model catalog name (mobilenet_v2, resnet50) or file path"
+        ),
     ] = "mobilenet_v2",
     delegate: Annotated[
         str,
@@ -170,10 +177,14 @@ def run_benchmark(
     elif runner_type.lower() == "adb":
         runner = AdbRunner(serial=serial)
     else:
-        console.print(f"[red]Error: Unknown runner '{runner_type}'. Choose: synthetic, onnx, adb[/red]", err=True)
+        console_err.print(
+            f"[red]Error: Unknown runner '{runner_type}'. Choose: synthetic, onnx, adb[/red]"
+        )
         raise typer.Exit(code=1)
 
-    with console.status(f"[bold green]Executing Jitter 4-rerun plan on {runner_type} runner...[/bold green]"):
+    with console.status(
+        f"[bold green]Executing Jitter 4-rerun plan on {runner_type} runner...[/bold green]"
+    ):
         report = execute_orchestrated_benchmark(
             runner=runner,
             model_name=model,
@@ -214,14 +225,14 @@ def diagnose_report(
         content = sys.stdin.read()
     else:
         if not report_file.exists():
-            console.print(f"[red]Error: File {report_file} does not exist.[/red]", err=True)
+            console_err.print(f"[red]Error: File {report_file} does not exist.[/red]")
             raise typer.Exit(code=1)
         content = report_file.read_text(encoding="utf-8")
 
     try:
         report = Report.model_validate_json(content)
     except Exception as e:
-        console.print(f"[red]Error: Invalid Jitter report format: {e}[/red]", err=True)
+        console_err.print(f"[red]Error: Invalid Jitter report format: {e}[/red]")
         raise typer.Exit(code=1) from e
 
     diagnosis = DiagnosisEngine().diagnose(report)
@@ -236,24 +247,30 @@ def diagnose_report(
 @app.command("compare")
 def compare_cli(
     report_a: Annotated[Path, typer.Argument(help="First report JSON file")],
-    report_b: Annotated[Path | None, typer.Argument(help="Optional second report JSON file")] = None,
+    report_b: Annotated[
+        Path | None, typer.Argument(help="Optional second report JSON file")
+    ] = None,
     run_a_idx: Annotated[int, typer.Option("--run-a", help="Run index from first report")] = 0,
-    run_b_idx: Annotated[int, typer.Option("--run-b", help="Run index from second (or same) report")] = 1,
-    json_output: Annotated[bool, typer.Option("--json", help="Output comparison result as JSON")] = False,
+    run_b_idx: Annotated[
+        int, typer.Option("--run-b", help="Run index from second (or same) report")
+    ] = 1,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Output comparison result as JSON")
+    ] = False,
 ) -> None:
     """Statistically compare two benchmark runs using Hodges-Lehmann shift and permutation testing."""
     if not report_a.exists():
-        console.print(f"[red]Error: File {report_a} does not exist.[/red]", err=True)
+        console_err.print(f"[red]Error: File {report_a} does not exist.[/red]")
         raise typer.Exit(code=1)
 
     rep_a = Report.model_validate_json(report_a.read_text(encoding="utf-8"))
     rep_b = Report.model_validate_json(report_b.read_text(encoding="utf-8")) if report_b else rep_a
 
     if run_a_idx >= len(rep_a.runs):
-        console.print(f"[red]Error: Run index {run_a_idx} out of range for {report_a}[/red]", err=True)
+        console_err.print(f"[red]Error: Run index {run_a_idx} out of range for {report_a}[/red]")
         raise typer.Exit(code=1)
     if run_b_idx >= len(rep_b.runs):
-        console.print(f"[red]Error: Run index {run_b_idx} out of range[/red]", err=True)
+        console_err.print(f"[red]Error: Run index {run_b_idx} out of range[/red]")
         raise typer.Exit(code=1)
 
     entry_a = rep_a.runs[run_a_idx]
@@ -270,14 +287,44 @@ def compare_cli(
     table.add_column("Value")
     table.add_column("Description")
 
-    table.add_row("Run A", f"{entry_a.rerun.value} ({entry_a.process_start.value})", f"N={len(entry_a.samples_ms)}")
-    table.add_row("Run B", f"{entry_b.rerun.value} ({entry_b.process_start.value})", f"N={len(entry_b.samples_ms)}")
-    table.add_row("Diff of Medians", f"{res.diff_of_medians:+.3f} ms", "Raw median difference (B - A)")
-    table.add_row("Hodges-Lehmann Shift", f"{res.hodges_lehmann_shift:+.3f} ms", "Pseudo-median of all pairwise differences")
-    table.add_row("Cliff's Delta", f"{res.cliffs_delta:+.3f} ({res.cliffs_magnitude})", "Non-parametric effect size [-1.0, +1.0]")
-    table.add_row("Permutation p-value", f"{res.permutation_p_value:.4f}", "Block permutation test preserving autocorrelation")
-    table.add_row("Mann-Whitney U", f"{res.mann_whitney_u:.1f} (p={res.mann_whitney_p_value:.4f})", "Rank-sum rank comparison")
-    table.add_row("95% Bootstrap CI", f"[{res.ci_lower:+.2f}, {res.ci_upper:+.2f}] ms", "BCa / Percentile confidence interval")
+    table.add_row(
+        "Run A",
+        f"{entry_a.rerun.value} ({entry_a.process_start.value})",
+        f"N={len(entry_a.samples_ms)}",
+    )
+    table.add_row(
+        "Run B",
+        f"{entry_b.rerun.value} ({entry_b.process_start.value})",
+        f"N={len(entry_b.samples_ms)}",
+    )
+    table.add_row(
+        "Diff of Medians", f"{res.diff_of_medians:+.3f} ms", "Raw median difference (B - A)"
+    )
+    table.add_row(
+        "Hodges-Lehmann Shift",
+        f"{res.hodges_lehmann_shift:+.3f} ms",
+        "Pseudo-median of all pairwise differences",
+    )
+    table.add_row(
+        "Cliff's Delta",
+        f"{res.cliffs_delta:+.3f} ({res.cliffs_magnitude})",
+        "Non-parametric effect size [-1.0, +1.0]",
+    )
+    table.add_row(
+        "Permutation p-value",
+        f"{res.permutation_p_value:.4f}",
+        "Block permutation test preserving autocorrelation",
+    )
+    table.add_row(
+        "Mann-Whitney U",
+        f"{res.mann_whitney_u:.1f} (p={res.mann_whitney_p_value:.4f})",
+        "Rank-sum rank comparison",
+    )
+    table.add_row(
+        "95% Bootstrap CI",
+        f"[{res.ci_lower:+.2f}, {res.ci_upper:+.2f}] ms",
+        "BCa / Percentile confidence interval",
+    )
 
     console.print(table)
 
@@ -285,12 +332,16 @@ def compare_cli(
 @app.command("report")
 def format_report_cmd(
     report_file: Annotated[Path, typer.Argument(help="Path to report JSON file")],
-    format_type: Annotated[str, typer.Option("--format", "-f", help="Format: terminal, markdown, html")] = "terminal",
-    output: Annotated[Path | None, typer.Option("--output", "-o", help="File to write formatted report")] = None,
+    format_type: Annotated[
+        str, typer.Option("--format", "-f", help="Format: terminal, markdown, html")
+    ] = "terminal",
+    output: Annotated[
+        Path | None, typer.Option("--output", "-o", help="File to write formatted report")
+    ] = None,
 ) -> None:
     """Format and display a Jitter benchmark report in terminal, markdown, or HTML."""
     if not report_file.exists():
-        console.print(f"[red]Error: File {report_file} does not exist.[/red]", err=True)
+        console_err.print(f"[red]Error: File {report_file} does not exist.[/red]")
         raise typer.Exit(code=1)
 
     report = Report.model_validate_json(report_file.read_text(encoding="utf-8"))
@@ -313,23 +364,29 @@ def format_report_cmd(
         else:
             typer.echo(html_text)
     else:
-        console.print(f"[red]Error: Invalid format '{format_type}'. Choose: terminal, markdown, html[/red]", err=True)
+        console_err.print(
+            f"[red]Error: Invalid format '{format_type}'. Choose: terminal, markdown, html[/red]"
+        )
         raise typer.Exit(code=1)
 
 
 @app.command("validate")
 def validate_cli(
-    scenarios_per_label: Annotated[int, typer.Option("--scenarios", "-s", help="Scenarios per class")] = 15,
+    scenarios_per_label: Annotated[
+        int, typer.Option("--scenarios", "-s", help="Scenarios per class")
+    ] = 15,
 ) -> None:
     """Run full synthetic benchmark suite and compute Macro-F1 and ECE."""
-    with console.status(f"[bold green]Running Jitter validation suite ({scenarios_per_label * 6} scenarios)...[/bold green]"):
+    with console.status(
+        f"[bold green]Running Jitter validation suite ({scenarios_per_label * 6} scenarios)...[/bold green]"
+    ):
         results = run_validation_suite(scenarios_per_label=scenarios_per_label)
 
     # Confusion matrix
     cm_table = Table(title="Validation Confusion Matrix", title_style="bold cyan")
     cm_table.add_column("True \\ Pred", style="bold")
-    for l in CANONICAL_LABELS:
-        cm_table.add_column(l, justify="right")
+    for lbl in CANONICAL_LABELS:
+        cm_table.add_column(lbl, justify="right")
 
     for i, true_l in enumerate(CANONICAL_LABELS):
         row = [true_l] + [str(results.confusion_matrix[i][j]) for j in range(len(CANONICAL_LABELS))]
@@ -344,13 +401,24 @@ def validate_cli(
     sum_table.add_column("Target")
     sum_table.add_column("Status", style="bold")
 
-    f1_status = "[bold green]PASS[/bold green]" if results.macro_f1 >= 0.95 else "[bold red]FAIL[/bold red]"
-    ece_status = "[bold green]PASS[/bold green]" if results.ece <= 0.05 else "[bold red]FAIL[/bold red]"
+    f1_status = (
+        "[bold green]PASS[/bold green]" if results.macro_f1 >= 0.95 else "[bold red]FAIL[/bold red]"
+    )
+    ece_status = (
+        "[bold green]PASS[/bold green]" if results.ece <= 0.05 else "[bold red]FAIL[/bold red]"
+    )
 
     sum_table.add_row("Macro-Averaged F1", f"{results.macro_f1:.4f}", ">= 0.9500", f1_status)
-    sum_table.add_row("Expected Calibration Error (ECE)", f"{results.ece:.4f}", "<= 0.0500", ece_status)
+    sum_table.add_row(
+        "Expected Calibration Error (ECE)", f"{results.ece:.4f}", "<= 0.0500", ece_status
+    )
     sum_table.add_row("Brier Score", f"{results.brier_score:.4f}", "Minimize", "[dim]Info[/dim]")
-    sum_table.add_row("Mean Latency", f"{results.mean_diagnose_ms:.2f} ms", "< 250 ms", "[bold green]PASS[/bold green]")
+    sum_table.add_row(
+        "Mean Latency",
+        f"{results.mean_diagnose_ms:.2f} ms",
+        "< 250 ms",
+        "[bold green]PASS[/bold green]",
+    )
 
     console.print(sum_table)
 
@@ -379,7 +447,9 @@ def simulate(
     ] = 42,
     secondary: Annotated[
         str | None,
-        typer.Option("--secondary", help="Optional secondary fault: warmup, thermal, fallback, noise"),
+        typer.Option(
+            "--secondary", help="Optional secondary fault: warmup, thermal, fallback, noise"
+        ),
     ] = None,
     output: Annotated[
         Path | None,
@@ -391,7 +461,9 @@ def simulate(
         diag_label = DiagnosisLabel(failure_mode)
     except ValueError:
         valid_modes = ", ".join(m.value for m in DiagnosisLabel)
-        console.print(f"[red]Error: Invalid failure mode '{failure_mode}'. Choose from: {valid_modes}[/red]", err=True)
+        console_err.print(
+            f"[red]Error: Invalid failure mode '{failure_mode}'. Choose from: {valid_modes}[/red]"
+        )
         raise typer.Exit(code=1) from None
 
     report = generate_scenario_report(
@@ -441,8 +513,12 @@ def _render_diagnosis_panel(diagnosis: Any) -> None:
 
 
 def _render_report_terminal(report: Report, diagnosis: Any) -> None:
-    console.print(f"\n[bold cyan]Jitter Benchmark Report[/bold cyan] [dim]({report.created_at})[/dim]")
-    console.print(f"Model: [bold]{report.model.name}[/bold] | Device: [bold]{report.device.manufacturer} {report.device.model}[/bold] ({report.device.soc})\n")
+    console.print(
+        f"\n[bold cyan]Jitter Benchmark Report[/bold cyan] [dim]({report.created_at})[/dim]"
+    )
+    console.print(
+        f"Model: [bold]{report.model.name}[/bold] | Device: [bold]{report.device.manufacturer} {report.device.model}[/bold] ({report.device.soc})\n"
+    )
 
     # Runs summary table
     table = Table(title="Controlled Reruns", title_style="bold")
@@ -457,6 +533,7 @@ def _render_report_terminal(report: Report, diagnosis: Any) -> None:
 
     for r in report.runs:
         import numpy as np
+
         med = float(np.median(r.samples_ms))
         p95 = float(np.percentile(r.samples_ms, 95))
         p99 = float(np.percentile(r.samples_ms, 99))
@@ -488,11 +565,14 @@ def _generate_markdown_report(report: Report, diagnosis: Any) -> str:
         "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     import numpy as np
+
     for r in report.runs:
         med = float(np.median(r.samples_ms))
         p95 = float(np.percentile(r.samples_ms, 95))
         p99 = float(np.percentile(r.samples_ms, 99))
-        lines.append(f"| `{r.rerun.value}` | `{r.process_start.value}` | `{r.delegate_executed}` | {len(r.samples_ms)} | {med:.2f} | {p95:.2f} | {p99:.2f} |")
+        lines.append(
+            f"| `{r.rerun.value}` | `{r.process_start.value}` | `{r.delegate_executed}` | {len(r.samples_ms)} | {med:.2f} | {p95:.2f} | {p99:.2f} |"
+        )
 
     lines.append("\n## Diagnosis Evidence\n")
     for ev in diagnosis.evidence:

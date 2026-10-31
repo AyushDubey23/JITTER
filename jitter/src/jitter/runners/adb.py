@@ -87,7 +87,9 @@ class AdbRunner(BaseRunner):
                 f"ADB executable '{self.adb_path}' not found. Please install Android Platform Tools."
             ) from None
         except subprocess.TimeoutExpired:
-            raise AdbRunnerError(f"ADB command timed out after {timeout}s: {' '.join(cmd)}") from None
+            raise AdbRunnerError(
+                f"ADB command timed out after {timeout}s: {' '.join(cmd)}"
+            ) from None
 
         if res.returncode != 0:
             err = res.stderr.strip() or res.stdout.strip()
@@ -327,10 +329,14 @@ class AdbRunner(BaseRunner):
                     notes.append(f"Low battery ({info.current_telemetry.battery_pct:.0f}% < 20%)")
                 if info.current_telemetry.battery_temp_c >= 40.0:
                     ready = False
-                    notes.append(f"Hot battery ({info.current_telemetry.battery_temp_c:.1f}°C >= 40°C)")
+                    notes.append(
+                        f"Hot battery ({info.current_telemetry.battery_temp_c:.1f}°C >= 40°C)"
+                    )
                 if info.current_telemetry.thermal_status >= 2:
                     ready = False
-                    notes.append(f"Thermal throttling active (status {info.current_telemetry.thermal_status})")
+                    notes.append(
+                        f"Thermal throttling active (status {info.current_telemetry.thermal_status})"
+                    )
 
                 if ready:
                     notes.append("Ready for benchmarking")

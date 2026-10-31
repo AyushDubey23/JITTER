@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import json
+import pytest
+
 from jitter.runners.adb import AdbRunner
 from jitter.runners.fake_server import FakeRunnerServer
 from jitter.schema.protocol import (
-    RestRequest,
-    RestResponse,
     RunnerCapabilities,
     RunnerInfoResponse,
     RunRequest,
@@ -86,11 +85,10 @@ def test_adb_runner_safety_constraint_rejection() -> None:
             model_path="/data/local/tmp/model.tflite",
             delegate="gpu",
             measured_iters=10,
-            constraints=RunSafetyConstraints(min_battery_pct=95.0),  # Will fail because mock has 85%
+            constraints=RunSafetyConstraints(
+                min_battery_pct=95.0
+            ),  # Will fail because mock has 85%
         )
 
-        try:
+        with pytest.raises(Exception, match="below minimum safe threshold"):
             runner.run(spec)
-            assert False, "Expected AdbRunnerError due to low battery"
-        except Exception as e:
-            assert "below minimum safe threshold" in str(e)

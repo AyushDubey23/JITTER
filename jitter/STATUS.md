@@ -1,6 +1,6 @@
 # Project Status: Jitter
 
-Last Updated: Phase 6 (CLI, Wire Protocol & Documentation)
+Last Updated: Phase 7 (Packaging, Multi-OS CI & Release Polish)
 
 ## Phase Checklist
 
@@ -11,7 +11,7 @@ Last Updated: Phase 6 (CLI, Wire Protocol & Documentation)
 - [x] **Phase 4: Runners & The Four Reruns**: BaseRunner, SyntheticRunner, DesktopOnnxRunner, 4 controlled reruns (`cold_warm`, `cooldown`, `delegate_swap`, `quiet_device`), orchestrator pipeline, safety constraints.
 - [x] **Phase 5: Diagnosis Engine & Validation Harness**: Feature extraction, rule evaluation with evidence strings, decision engine, train/val/test split validation, confusion matrix (Macro-F1 1.0000, ECE 0.0398), calibrated confidence.
 - [x] **Phase 6: CLI, Wire Protocol & Documentation**: Full CLI suite (`run`, `compare`, `diagnose`, `devices`, `report`, `simulate`, `schema`, `validate`), `AdbRunner`, `FakeRunnerServer`, documentation (`methodology.md`, `protocol.md`, `report-schema.md`).
-- [ ] **Phase 7: Packaging & CI**: Build sdist and wheel, twine verification, multi-OS GitHub Actions workflow, nightly validation regressions check.
+- [x] **Phase 7: Packaging & CI**: Built clean sdist and wheel (`jitter_ml-0.1.0`), twine validation passed, clean virtual environment installation verified, multi-OS & multi-Python GitHub Actions matrix CI (Python 3.10-3.13 on Ubuntu, macOS, Windows).
 
 ## Package Identity & PyPI Availability
 

@@ -7,17 +7,11 @@ import numpy as np
 from jitter.diagnosis.features import DiagnosticFeatures
 from jitter.diagnosis.thresholds import (
     DELEGATE_CPU_CLIFFS_DELTA_CEILING,
-    DELEGATE_CPU_SHIFT_MAX_RATIO,
     MIN_EFFECTIVE_SAMPLE_SIZE,
     NOISE_MAD_RATIO_THRESHOLD,
     NOISE_MIN_OUTLIER_COUNT,
-    NOISE_QUIET_MEDIAN_SHIFT_TOLERANCE,
     NOISE_QUIET_P99_REDUCTION_RATIO,
-    REGRESSION_CLIFFS_DELTA_MIN,
-    REGRESSION_MIN_SHIFT_MS,
-    REGRESSION_PERMUTATION_P,
     THERMAL_COOLDOWN_CLIFFS_DELTA,
-    THERMAL_MANN_KENDALL_P,
     THERMAL_MIN_STATUS,
     THERMAL_THEIL_SEN_SLOPE,
     WARMUP_MIN_DISCARD_ITERS,
@@ -39,7 +33,12 @@ def evaluate_inconclusive(
             passed=False,
             plain_language=f"Iteration count per run ({feat.min_run_samples}) is below minimum 15 required for statistical validity.",
         )
-        return True, 0.94, [ev], f"Insufficient iterations per run ({feat.min_run_samples} < 15) to evaluate latency distribution."
+        return (
+            True,
+            0.94,
+            [ev],
+            f"Insufficient iterations per run ({feat.min_run_samples} < 15) to evaluate latency distribution.",
+        )
 
     # Insufficient total samples across runs
     if feat.total_samples < 50:
@@ -50,15 +49,29 @@ def evaluate_inconclusive(
             passed=False,
             plain_language=f"Total recorded sample count ({feat.total_samples}) is below minimum 50 required across reruns.",
         )
-        return True, 0.94, [ev], f"Insufficient total sample count ({feat.total_samples} < 50) to establish reliable baseline."
+        return (
+            True,
+            0.94,
+            [ev],
+            f"Insufficient total sample count ({feat.total_samples} < 50) to establish reliable baseline.",
+        )
 
     # If severe autocorrelation reduces effective sample size below threshold
     # and no deterministic physical mechanism is present:
     has_deterministic_signal = (
         (feat.warmup_detected and feat.warmup_ratio >= WARMUP_RATIO_THRESHOLD)
-        or (feat.theil_sen_slope >= THERMAL_THEIL_SEN_SLOPE and (feat.peak_thermal_status >= THERMAL_MIN_STATUS or abs(feat.cooldown_cliffs_delta) >= 0.33))
+        or (
+            feat.theil_sen_slope >= THERMAL_THEIL_SEN_SLOPE
+            and (
+                feat.peak_thermal_status >= THERMAL_MIN_STATUS
+                or abs(feat.cooldown_cliffs_delta) >= 0.33
+            )
+        )
         or feat.delegate_mismatch
-        or (feat.cold_outlier_count >= NOISE_MIN_OUTLIER_COUNT and feat.quiet_p99_reduction_ratio >= NOISE_QUIET_P99_REDUCTION_RATIO)
+        or (
+            feat.cold_outlier_count >= NOISE_MIN_OUTLIER_COUNT
+            and feat.quiet_p99_reduction_ratio >= NOISE_QUIET_P99_REDUCTION_RATIO
+        )
     )
 
     if feat.min_n_eff < MIN_EFFECTIVE_SAMPLE_SIZE and not has_deterministic_signal:
@@ -76,7 +89,9 @@ def evaluate_inconclusive(
             f"Overwhelming variance or severe autocorrelation (n_eff={feat.min_n_eff:.1f} < {MIN_EFFECTIVE_SAMPLE_SIZE:.0f}). "
             "Data cannot distinguish systematic root causes from random noise."
         )
-        confidence = float(np.clip(0.88 + (1.0 - (feat.min_n_eff / MIN_EFFECTIVE_SAMPLE_SIZE)) * 0.08, 0.88, 0.96))
+        confidence = float(
+            np.clip(0.88 + (1.0 - (feat.min_n_eff / MIN_EFFECTIVE_SAMPLE_SIZE)) * 0.08, 0.88, 0.96)
+        )
         return True, confidence, [ev], reason
 
     return False, 0.0, [], None
@@ -120,7 +135,9 @@ def evaluate_warmup_drift(
         feat.quiet_p99_reduction_ratio >= NOISE_QUIET_P99_REDUCTION_RATIO
         and feat.cold_outlier_count >= 2
     )
-    is_warmup = feat.warmup_detected and passed_ratio and passed_iters and not passed_noise_suppression
+    is_warmup = (
+        feat.warmup_detected and passed_ratio and passed_iters and not passed_noise_suppression
+    )
     confidence = 0.0
     if is_warmup:
         # Calibrate confidence based on effect magnitude
@@ -151,7 +168,9 @@ def evaluate_thermal_throttling(
         )
     )
 
-    passed_status = feat.peak_thermal_status >= THERMAL_MIN_STATUS or feat.max_battery_temp_c >= 38.0
+    passed_status = (
+        feat.peak_thermal_status >= THERMAL_MIN_STATUS or feat.max_battery_temp_c >= 38.0
+    )
     evidence.append(
         EvidenceItem(
             rule_id="thermal_status_elevation",
@@ -179,9 +198,8 @@ def evaluate_thermal_throttling(
         )
     )
 
-    is_thermal = (
-        (passed_slope and passed_status)
-        or (passed_slope and passed_cooldown and feat.mann_kendall_p < 0.05)
+    is_thermal = (passed_slope and passed_status) or (
+        passed_slope and passed_cooldown and feat.mann_kendall_p < 0.05
     )
     confidence = 0.0
     if is_thermal:
@@ -229,7 +247,9 @@ def evaluate_delegate_fallback(
     )
 
     is_fallback = mismatch or (
-        feat.delegate_requested.lower() != "cpu" and passed_cpu_parity and not feat.thermal_drift_detected
+        feat.delegate_requested.lower() != "cpu"
+        and passed_cpu_parity
+        and not feat.thermal_drift_detected
     )
 
     confidence = 0.0
@@ -245,7 +265,10 @@ def evaluate_background_noise(
     """Evaluate evidence for transient OS / background contention spikes."""
     evidence: list[EvidenceItem] = []
 
-    passed_bursts = feat.cold_outlier_count >= NOISE_MIN_OUTLIER_COUNT or feat.cold_mad_ratio >= NOISE_MAD_RATIO_THRESHOLD
+    passed_bursts = (
+        feat.cold_outlier_count >= NOISE_MIN_OUTLIER_COUNT
+        or feat.cold_mad_ratio >= NOISE_MAD_RATIO_THRESHOLD
+    )
     evidence.append(
         EvidenceItem(
             rule_id="outlier_burst_frequency",
@@ -276,7 +299,6 @@ def evaluate_background_noise(
     is_thermal_present = feat.thermal_drift_detected and (
         feat.peak_thermal_status >= THERMAL_MIN_STATUS or feat.max_battery_temp_c >= 35.0
     )
-    is_warmup_present = feat.warmup_detected and feat.warmup_ratio >= WARMUP_RATIO_THRESHOLD
 
     is_noise = passed_bursts and passed_quiet and not is_thermal_present
     confidence = 0.0

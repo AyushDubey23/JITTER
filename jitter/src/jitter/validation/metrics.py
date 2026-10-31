@@ -11,7 +11,7 @@ def compute_confusion_matrix(
     labels: list[str],
 ) -> np.ndarray:
     """Compute an N x N confusion matrix for the given labels."""
-    label_to_idx = {l: i for i, l in enumerate(labels)}
+    label_to_idx = {lbl: i for i, lbl in enumerate(labels)}
     n = len(labels)
     cm = np.zeros((n, n), dtype=int)
     for yt, yp in zip(y_true, y_pred, strict=False):
@@ -89,7 +89,9 @@ def compute_expected_calibration_error(
 
     for i in range(n_bins):
         low, high = bins[i], bins[i + 1]
-        mask = (confs >= low) & (confs < high) if i < n_bins - 1 else (confs >= low) & (confs <= high)
+        mask = (
+            (confs >= low) & (confs < high) if i < n_bins - 1 else (confs >= low) & (confs <= high)
+        )
         bin_count = int(np.sum(mask))
         if bin_count > 0:
             bin_acc = float(np.mean(correct[mask]))

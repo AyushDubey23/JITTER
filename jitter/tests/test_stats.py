@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from jitter.stats import (
@@ -169,6 +169,7 @@ def test_modified_z_score_outlier_detection() -> None:
     assert outliers.outlier_mask[0] is False
 
 
+@settings(deadline=None)
 @given(
     st.lists(
         st.floats(min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False),

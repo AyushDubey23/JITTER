@@ -131,7 +131,9 @@ def generate_scenario_report(
     # Initialize physical models
     thermal = RCThermalModel(initial_temp_c=30.0)
     noise_gen = ContentionNoiseGenerator(
-        arrival_rate_per_iter=0.15 if (label == DiagnosisLabel.BACKGROUND_NOISE or secondary_fault == "noise") else 0.05,
+        arrival_rate_per_iter=0.15
+        if (label == DiagnosisLabel.BACKGROUND_NOISE or secondary_fault == "noise")
+        else 0.05,
         multiplier_range=(2.0, 5.0),
         seed=seed,
     )

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
-from jitter.diagnosis.engine import DiagnosisEngine, diagnose
+from jitter.diagnosis.engine import diagnose
 from jitter.diagnosis.features import DiagnosticFeatures, extract_features
 from jitter.schema.runs import DiagnosisLabel
 from jitter.synth.scenarios import generate_scenario_report

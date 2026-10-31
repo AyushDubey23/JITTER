@@ -63,14 +63,18 @@ def test_cli_simulate(tmp_path: Path) -> None:
 
 
 def test_cli_diagnose() -> None:
-    report_path = Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    report_path = (
+        Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    )
     res = runner.invoke(app, ["diagnose", str(report_path)])
     assert res.exit_code == 0
     assert "WARMUP_DRIFT" in res.stdout
 
 
 def test_cli_diagnose_json() -> None:
-    report_path = Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    report_path = (
+        Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    )
     res = runner.invoke(app, ["diagnose", str(report_path), "--json"])
     assert res.exit_code == 0
     diag_data = json.loads(res.stdout)
@@ -79,7 +83,9 @@ def test_cli_diagnose_json() -> None:
 
 
 def test_cli_compare() -> None:
-    report_path = Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    report_path = (
+        Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    )
     res = runner.invoke(app, ["compare", str(report_path), "--run-a", "0", "--run-b", "1"])
     assert res.exit_code == 0
     assert "Robust Two-Sample Comparison" in res.stdout
@@ -87,7 +93,9 @@ def test_cli_compare() -> None:
 
 
 def test_cli_report_formats(tmp_path: Path) -> None:
-    report_path = Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    report_path = (
+        Path(__file__).resolve().parent.parent / "examples" / "reports" / "warmup_drift.json"
+    )
 
     # Terminal format
     res_term = runner.invoke(app, ["report", str(report_path), "--format", "terminal"])
@@ -96,14 +104,18 @@ def test_cli_report_formats(tmp_path: Path) -> None:
 
     # Markdown format
     md_file = tmp_path / "report.md"
-    res_md = runner.invoke(app, ["report", str(report_path), "--format", "markdown", "-o", str(md_file)])
+    res_md = runner.invoke(
+        app, ["report", str(report_path), "--format", "markdown", "-o", str(md_file)]
+    )
     assert res_md.exit_code == 0
     assert md_file.exists()
     assert "# Jitter Benchmark Report" in md_file.read_text(encoding="utf-8")
 
     # HTML format
     html_file = tmp_path / "report.html"
-    res_html = runner.invoke(app, ["report", str(report_path), "--format", "html", "-o", str(html_file)])
+    res_html = runner.invoke(
+        app, ["report", str(report_path), "--format", "html", "-o", str(html_file)]
+    )
     assert res_html.exit_code == 0
     assert html_file.exists()
     assert "<!DOCTYPE html>" in html_file.read_text(encoding="utf-8")

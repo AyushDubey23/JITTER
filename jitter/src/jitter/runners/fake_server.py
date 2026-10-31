@@ -8,6 +8,8 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
+from pydantic import BaseModel
+
 from jitter.schema.protocol import (
     AbortResponse,
     RestResponse,
@@ -25,13 +27,14 @@ from jitter.synth.scenarios import generate_scenario_report
 
 
 class _FakeRunnerHTTPHandler(BaseHTTPRequestHandler):
-    server: FakeRunnerServerInstance  # type: ignore[assignment]
+    server: FakeRunnerServerInstance
 
-    def log_message(self, format: str, *args: Any) -> None:
+    def log_message(self, *args: Any, **kwargs: Any) -> None:
         """Suppress default HTTP server logging to keep test output clean."""
+        del args, kwargs
         return
 
-    def _send_json(self, status_code: int, data: dict[str, Any] | BaseModel) -> None:  # type: ignore[name-defined]
+    def _send_json(self, status_code: int, data: dict[str, Any] | BaseModel) -> None:
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
@@ -80,7 +83,9 @@ class _FakeRunnerHTTPHandler(BaseHTTPRequestHandler):
                 state = RunStateResponse(
                     run_id=run_id,
                     status=RunStatus.DONE,
-                    progress=RunProgress(completed_iters=50, total_iters=50, current_median_ms=12.4),
+                    progress=RunProgress(
+                        completed_iters=50, total_iters=50, current_median_ms=12.4
+                    ),
                 )
                 self._send_json(200, state)
             else:
@@ -102,7 +107,9 @@ class _FakeRunnerHTTPHandler(BaseHTTPRequestHandler):
             run_id = f"run_{len(self.server.runs) + 1}"
 
             # Generate synthetic run entry conforming to spec
-            scenario_rep = generate_scenario_report("warmup_drift", iterations=spec.measured_iters, seed=42)
+            scenario_rep = generate_scenario_report(
+                "warmup_drift", iterations=spec.measured_iters, seed=42
+            )
             fresh_run = scenario_rep.runs[0]
             n_iters = spec.measured_iters
             t0 = time.monotonic_ns()
@@ -144,7 +151,9 @@ class _FakeRunnerHTTPHandler(BaseHTTPRequestHandler):
             self._send_json(200, res)
         elif path.endswith("/abort"):
             run_id = path.split("/")[3]
-            self._send_json(200, AbortResponse(run_id=run_id, aborted=True, status=RunStatus.ABORTED))
+            self._send_json(
+                200, AbortResponse(run_id=run_id, aborted=True, status=RunStatus.ABORTED)
+            )
         else:
             self._send_json(404, {"error": "Not found"})
 

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
+from jitter.schema.report import Report
 from jitter.schema.runs import ProcessStart, RerunType, RunEntry
 from jitter.stats.autocorr import effective_sample_size
 from jitter.stats.compare import compare_runs
@@ -12,9 +12,6 @@ from jitter.stats.drift import analyze_drift
 from jitter.stats.outliers import detect_outliers
 from jitter.stats.summary import robust_summary
 from jitter.stats.warmup import analyze_warmup
-
-if TYPE_CHECKING:
-    from jitter.schema.report import Report
 
 
 @dataclass(frozen=True)
@@ -66,9 +63,10 @@ class DiagnosticFeatures:
 
 def extract_features(runs_or_report: Report | list[RunEntry]) -> DiagnosticFeatures:
     """Extract diagnostic features from a Report or list of RunEntry objects."""
-    runs: list[RunEntry] = (
-        runs_or_report.runs if hasattr(runs_or_report, "runs") else runs_or_report  # type: ignore[union-attr]
-    )
+    if isinstance(runs_or_report, Report):
+        runs = runs_or_report.runs
+    else:
+        runs = runs_or_report
 
     if not runs:
         raise ValueError("Cannot extract diagnostic features from an empty list of runs")
@@ -116,16 +114,22 @@ def extract_features(runs_or_report: Report | list[RunEntry]) -> DiagnosticFeatu
 
     # 2. Thermal drift and cooldown analysis
     drift_res = analyze_drift(cold_run.samples_ms)
-    peak_thermal = max(cold_run.telemetry.thermal_status) if cold_run.telemetry.thermal_status else 0
+    peak_thermal = (
+        max(cold_run.telemetry.thermal_status) if cold_run.telemetry.thermal_status else 0
+    )
     max_battery_temp = (
         max(cold_run.telemetry.battery_temp_c) if cold_run.telemetry.battery_temp_c else 25.0
     )
 
-    cooldown_comp = compare_runs(cold_run.samples_ms, cooldown_run.samples_ms, seed=42, n_permutations=100)
+    cooldown_comp = compare_runs(
+        cold_run.samples_ms, cooldown_run.samples_ms, seed=42, n_permutations=100
+    )
 
     # 3. Delegate swap analysis
     delegate_mismatch = cold_run.delegate_requested != cold_run.delegate_executed
-    cpu_comp = compare_runs(cold_run.samples_ms, delegate_swap_run.samples_ms, seed=42, n_permutations=100)
+    cpu_comp = compare_runs(
+        cold_run.samples_ms, delegate_swap_run.samples_ms, seed=42, n_permutations=100
+    )
 
     # 4. Background noise & outlier analysis
     summ_cold = robust_summary(cold_run.samples_ms)

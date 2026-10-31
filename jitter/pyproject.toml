@@ -82,6 +82,10 @@ ignore = [
     "E501", # line length handled by formatter
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["E402"]
+"tests/*" = ["ARG001", "ARG002"]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true
@@ -98,8 +102,11 @@ warn_no_return = true
 
 [[tool.mypy.overrides]]
 module = [
+    "scipy",
     "scipy.*",
+    "hypothesis",
     "hypothesis.*",
+    "onnxruntime",
     "onnxruntime.*",
 ]
 ignore_missing_imports = true

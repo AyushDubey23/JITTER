@@ -95,7 +95,9 @@ def run_validation_suite(
             confidences.append(diagnosis.confidence)
 
     total_time = time.perf_counter() - t0
-    mean_diag_ms = float(sum(diagnose_durations) / len(diagnose_durations)) if diagnose_durations else 0.0
+    mean_diag_ms = (
+        float(sum(diagnose_durations) / len(diagnose_durations)) if diagnose_durations else 0.0
+    )
 
     cm = compute_confusion_matrix(y_true, y_pred, CANONICAL_LABELS)
     per_class = compute_classification_metrics(y_true, y_pred, CANONICAL_LABELS)
