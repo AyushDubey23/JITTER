@@ -7,8 +7,12 @@ const body = Instrument_Sans({ subsets: ['latin'], weight: ['400', '600'], varia
 const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://jitter-ml.vercel.app'),
   title: 'Jitter — Root-cause analysis for on-device ML latency',
   description: 'A Python library and Android runner for diagnosing inconsistent on-device ML latency. By Ayush Dubey.',
+  alternates: {
+    canonical: 'https://jitter-ml.vercel.app',
+  },
   authors: [{ name: 'Ayush Dubey', url: 'https://github.com/AyushDubey23' }],
   creator: 'Ayush Dubey',
   icons: {
@@ -23,7 +27,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Jitter — Root-cause analysis for on-device ML latency',
     description: 'Diagnose inconsistent on-device ML latency with controlled reruns and statistical evidence. By Ayush Dubey.',
+    url: 'https://jitter-ml.vercel.app',
+    siteName: 'Jitter',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Jitter — Root-cause analysis for on-device ML latency',
+    description: 'Diagnose inconsistent on-device ML latency with controlled reruns and statistical evidence. By Ayush Dubey.',
   },
 }
 
