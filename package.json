@@ -1,6 +1,6 @@
 {
   "name": "jitter",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Root-cause analysis for on-device ML latency",
   "author": "Ayush Dubey",
   "private": true,

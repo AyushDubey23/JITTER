@@ -149,7 +149,7 @@ const docsData: Record<string, DocSection> = {
   },
   'Diagnosis engine': {
     title: 'Diagnosis Engine',
-    subtitle: 'Multi-signal evidence evaluation, decision boundaries, and calibrated confidence.',
+    subtitle: 'Multi-signal evidence evaluation, decision boundaries, and empirical confidence evaluation.',
     content: [
       {
         heading: 'Decision Engine Rules',
@@ -168,7 +168,7 @@ const docsData: Record<string, DocSection> = {
           headers: ['Metric', 'Achieved Score', 'Target Threshold', 'Status'],
           rows: [
             ['Macro-F1 Score (Synthetic)', '1.0000', '>= 0.95', 'PASSED (Synthetic ground-truth consistency)'],
-            ['Expected Calibration Error (ECE)', '0.0398', '<= 0.05', 'PASSED (Well-calibrated probabilities on synthetic data)'],
+            ['Expected Calibration Error (ECE)', '0.0398', '<= 0.05', 'PASSED (High probability reliability on synthetic data)'],
             ['Brier Score', '0.0020', '<= 0.05', 'PASSED (High synthetic probability accuracy)'],
             ['Mean Diagnosis Latency', '84.19 ms', '< 250 ms', 'PASSED (Instant offline execution)']
           ]
@@ -282,12 +282,12 @@ const docsData: Record<string, DocSection> = {
       {
         heading: 'Wire Protocol v1 Architecture',
         paragraphs: [
-          'The Android runner runs as a foreground service APK on the device, exposing a local REST server on port 9008 via ADB reverse socket forwarding (`adb reverse tcp:9008 tcp:9008`).'
+          'The Android runner runs as a foreground service APK on the device, exposing a local REST server on port 8080 via ADB reverse socket forwarding (`adb reverse tcp:8080 tcp:8080`).'
         ],
         table: {
           headers: ['HTTP Method & Endpoint', 'Payload / Params', 'Response Description'],
           rows: [
-            ['GET /ping', 'None', 'Health check: {"status": "ok", "version": "0.1.0"}'],
+            ['GET /ping', 'None', 'Health check: {"status": "ok", "version": "0.1.2"}'],
             ['GET /v1/info', 'None', 'Device model, SoC, API level, battery temp, supported delegates'],
             ['POST /v1/runs', 'RunRequest JSON', 'Initiate run: {"run_id": "uuid", "status": "running"}'],
             ['GET /v1/runs/{id}', 'None', 'Poll run progress: iterations completed, battery temp, status'],
@@ -305,15 +305,15 @@ const docsData: Record<string, DocSection> = {
     ]
   },
   'Report schema': {
-    title: 'Report Schema (v0.1.0)',
+    title: 'Report Schema (v0.1.2)',
     subtitle: 'Formal JSON specification for Jitter benchmark reports and telemetry series.',
     content: [
       {
         heading: 'Schema Structure',
         paragraphs: [
-          'Every Jitter benchmark output adheres strictly to the Report JSON Schema v0.1.0 defined in Pydantic v2. Schema validation can be run with `jitter schema validate report.json`.'
+          'Every Jitter benchmark output adheres strictly to the Report JSON Schema v0.1.2 defined in Pydantic v2. Schema validation can be run with `jitter schema validate report.json`.'
         ],
-        code: `{\n  "schema_version": "0.1.0",\n  "jitter_version": "0.1.0",\n  "created_at": "2026-10-31T19:28:27Z",\n  "source": "android_adb",\n  "model": {\n    "name": "mobilenet_v3.tflite",\n    "sha256": "4a7f29...",\n    "size_bytes": 14200000\n  },\n  "device": {\n    "model": "Pixel 7",\n    "manufacturer": "Google",\n    "soc": "Tensor G2",\n    "android_api": 34\n  },\n  "runs": [\n    {\n      "rerun": "cold_warm",\n      "process_start": "cold",\n      "delegate_requested": "gpu",\n      "delegate_executed": "gpu",\n      "samples_ms": [42.1, 16.4, 14.2, 14.1, ...],\n      "telemetry": {\n        "battery_temp_c": [31.2, 31.5, 31.8, ...],\n        "thermal_status": [0, 0, 0, ...]\n      }\n    }\n  ],\n  "diagnosis": {\n    "label": "thermal_throttling",\n    "confidence": 0.94,\n    "evidence": [\n      {\n        "rule_id": "thermal_theil_sen_slope",\n        "description": "Positive median latency slope +0.024 ms/iter",\n        "metric_name": "theil_sen_slope",\n        "metric_value": 0.024,\n        "threshold": 0.020\n      }\n    ]\n  }\n}`,
+        code: `{\n  "schema_version": "0.1.2",\n  "jitter_version": "0.1.2",\n  "created_at": "2026-10-31T19:28:27Z",\n  "source": "android_adb",\n  "model": {\n    "name": "mobilenet_v3.tflite",\n    "sha256": "4a7f29...",\n    "size_bytes": 14200000\n  },\n  "device": {\n    "model": "Pixel 7",\n    "manufacturer": "Google",\n    "soc": "Tensor G2",\n    "android_api": 34\n  },\n  "runs": [\n    {\n      "rerun": "cold_warm",\n      "process_start": "cold",\n      "delegate_requested": "gpu",\n      "delegate_executed": "gpu",\n      "samples_ms": [42.1, 16.4, 14.2, 14.1, ...],\n      "telemetry": {\n        "battery_temp_c": [31.2, 31.5, 31.8, ...],\n        "thermal_status": [0, 0, 0, ...]\n      }\n    }\n  ],\n  "diagnosis": {\n    "label": "thermal_throttling",\n    "confidence": 0.94,\n    "evidence": [\n      {\n        "rule_id": "thermal_theil_sen_slope",\n        "description": "Positive median latency slope +0.024 ms/iter",\n        "metric_name": "theil_sen_slope",\n        "metric_value": 0.024,\n        "threshold": 0.020\n      }\n    ]\n  }\n}`,
         codeLang: 'json'
       }
     ]
@@ -454,7 +454,7 @@ export default function Docs() {
                 JITTER<span className="text-[var(--hot)]">.</span>
               </span>
             </Link>
-            <span className="hidden font-mono text-xs text-[var(--muted)] sm:inline">Docs v0.1</span>
+            <span className="hidden font-mono text-xs text-[var(--muted)] sm:inline">Docs v0.1.2</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -538,7 +538,7 @@ export default function Docs() {
         {/* Center Main Content */}
         <main className="min-w-0">
           <div className="border border-[var(--orange)]/30 bg-[var(--surface)] px-4 py-2.5 font-mono text-xs text-[var(--orange)]">
-            Verified with Jitter v0.1.1 engine on synthetic validation suite (Macro-F1 1.0000, ECE 0.0398).
+            Verified with Jitter v0.1.2 engine on synthetic validation suite (Macro-F1 1.0000, ECE 0.0398).
           </div>
 
           <article className="pt-8">

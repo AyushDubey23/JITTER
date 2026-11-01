@@ -1,6 +1,6 @@
 {
-  "schema_version": "0.1.0",
-  "jitter_version": "0.1.1",
+  "schema_version": "0.1.2",
+  "jitter_version": "0.1.2",
   "created_at": "2026-11-01T08:52:55.561372+00:00",
   "seed": 62,
   "source": "synthetic",
@@ -14,7 +14,7 @@
     "manufacturer": "Google",
     "soc": "Tensor G2",
     "android_api": 34,
-    "runner_version": "0.1.1"
+    "runner_version": "0.1.2"
   },
   "config": {
     "warmup_iterations": 5,
