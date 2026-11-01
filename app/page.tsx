@@ -11,6 +11,8 @@ import {
   Copy,
   Cpu,
   Download,
+  Smartphone,
+  ShieldCheck,
   ExternalLink,
   Eye,
   FileJson,
@@ -381,6 +383,11 @@ function Header() {
           </span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm text-[var(--muted)] md:flex">
+          <a href="#android-app" className="inline-flex items-center gap-1.5 font-medium text-[var(--hot)] transition hover:text-white">
+            <Smartphone className="size-3.5" />
+            <span>Android App</span>
+            <span className="rounded bg-[var(--hot)]/20 px-1.5 py-0.2 text-[10px] font-mono font-bold text-[var(--hot)]">v0.1.2</span>
+          </a>
           <a href="#dashboard" className="transition hover:text-[var(--text)]">
             Live Inspector
           </a>
@@ -1008,6 +1015,171 @@ function ControlledRerunsSection() {
   )
 }
 
+
+function AndroidAppShowcase() {
+  const [activeScreen, setActiveScreen] = useState(0)
+
+  const screens = [
+    {
+      id: 'run',
+      tag: '01 / LIVE INFERENCE',
+      title: 'Real-Time Latency Waveforms',
+      desc: 'Monitors rolling median, p95 jitter spikes, and device battery temperature during continuous LiteRT / TFLite inferences.',
+      image: '/app-screenshots/jitter-run-screen.png',
+      alt: 'Jitter Android live inference run screen showing real-time latency waveform',
+      badge: '38.4°C • Light Thermal',
+      badgeColor: 'border-[var(--cold)]/40 text-[var(--cold)] bg-[var(--cold)]/10',
+    },
+    {
+      id: 'diagnosis',
+      tag: '02 / CONTROLLED RERUNS',
+      title: 'Automated Root-Cause Verdict',
+      desc: 'Executes cold vs warm, cooldown, delegate swap, and quiet device reruns with an automated confidence score and evidence checklist.',
+      image: '/app-screenshots/jitter-diagnosis-screen.png',
+      alt: 'Jitter Android diagnosis screen showing thermal throttling verdict and 4 reruns',
+      badge: '0.93 Confidence Verdict',
+      badgeColor: 'border-[var(--hot)]/40 text-[var(--hot)] bg-[var(--hot)]/10',
+    },
+    {
+      id: 'delegate',
+      tag: '03 / HARDWARE ACCELERATION',
+      title: 'Silent Fallback Detection',
+      desc: 'Catches silent driver fallbacks from NNAPI/GPU back to CPU, comparing median latency deltas to pinpoint driver incompatibilities.',
+      image: '/app-screenshots/jitter-delegate-screen.png',
+      alt: 'Jitter Android delegate swap screen showing NNAPI fallback to CPU comparison',
+      badge: 'Fallback Alert',
+      badgeColor: 'border-[var(--magenta)]/40 text-[var(--magenta)] bg-[var(--magenta)]/10',
+    },
+  ]
+
+  return (
+    <section id="android-app" className="relative border-t border-[var(--line)] bg-[var(--surface)] py-24 sm:py-32 overflow-hidden">
+      {/* Background ambient thermal glow */}
+      <div className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 size-[650px] rounded-full bg-[radial-gradient(circle,rgba(255,106,26,0.08)_0%,rgba(42,27,255,0.03)_50%,transparent_70%)] blur-3xl" aria-hidden="true" />
+
+      <div className="relative mx-auto max-w-7xl px-5">
+        {/* Section Header */}
+        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-2 border border-[var(--hot)]/40 bg-[var(--ink)] px-3 py-1 font-mono text-xs text-[var(--hot)]">
+              <Smartphone className="size-3.5" />
+              <span>JITTER ON ANDROID • STANDALONE RELEASE v0.1.2-ALPHA</span>
+            </div>
+            <h2 className="font-display text-3xl font-semibold tracking-[-.05em] sm:text-5xl">
+              The entire diagnostic engine, natively on physical silicon.
+            </h2>
+            <p className="mt-4 text-base leading-7 text-[var(--muted)] sm:text-lg">
+              No emulators. No cloud proxies. Profile on-device machine learning models directly on Android phones with live SoC thermal telemetry, real NPU/GPU inference graphs, and instant root-cause reports.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <a
+              href="https://github.com/AyushDubey23/jitter-android/releases/download/v0.1.2-alpha/Jitter-v0.1.2-alpha.apk"
+              className="inline-flex items-center justify-center gap-2 border border-[var(--hot)] bg-[var(--hot)] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[var(--hot)]/90 shadow-[0_0_25px_rgba(255,106,26,0.3)]"
+            >
+              <Download className="size-4" />
+              <span>Download Signed APK</span>
+              <span className="ml-1 rounded bg-black/20 px-1.5 py-0.5 text-xs font-mono">9.6 MB</span>
+            </a>
+            <a
+              href="https://github.com/AyushDubey23/jitter-android"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 border border-[var(--line)] bg-[var(--ink)] px-5 py-3.5 text-sm font-medium text-[var(--text)] transition hover:border-[var(--hot)] hover:text-white"
+            >
+              <span>GitHub Repo</span>
+              <ExternalLink className="size-3.5 text-[var(--muted)]" />
+            </a>
+          </div>
+        </div>
+
+        {/* Clean Installation & Safety Guarantee Bar */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 border border-[var(--line)] bg-[var(--ink)]/80 p-4 font-mono text-xs text-[var(--muted)]">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="size-4 text-[var(--cold)] shrink-0" />
+            <span><strong className="text-[var(--text)]">Verified v2/v3 Signatures:</strong> Installs smoothly without harmful app warnings.</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Check className="size-4 text-[var(--hot)] shrink-0" />
+            <span><strong className="text-[var(--text)]">100% Offline & Private:</strong> Zero trackers, zero ads, zero background data collection.</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Cpu className="size-4 text-[var(--magenta)] shrink-0" />
+            <span><strong className="text-[var(--text)]">Silicon Native:</strong> Supports LiteRT & TFLite delegates (NNAPI, GPU, CPU).</span>
+          </div>
+        </div>
+
+        {/* 3-Phone Showcase Gallery */}
+        <div className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-3">
+          {screens.map((screen, idx) => (
+            <div
+              key={screen.id}
+              className="group flex flex-col justify-between border border-[var(--line)] bg-[var(--ink)] p-5 transition-all duration-300 hover:border-[var(--hot)]/60 hover:shadow-[0_8px_30px_rgba(255,106,26,0.12)]"
+            >
+              {/* Card Meta Header */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-mono text-xs font-bold text-[var(--muted)]">{screen.tag}</span>
+                  <span className={`inline-flex items-center px-2 py-0.5 font-mono text-[11px] border ${screen.badgeColor}`}>
+                    {screen.badge}
+                  </span>
+                </div>
+                <h3 className="font-display text-xl font-bold text-[var(--text)] tracking-tight">
+                  {screen.title}
+                </h3>
+                <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                  {screen.desc}
+                </p>
+              </div>
+
+              {/* Phone Device Mockup Container */}
+              <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-[2rem] border-4 border-zinc-800/90 bg-black p-1 shadow-2xl transition-transform duration-300 group-hover:scale-[1.02]">
+                {/* Device Screen Frame */}
+                <div className="relative overflow-hidden rounded-[1.6rem] bg-black">
+                  <img
+                    src={screen.image}
+                    alt={screen.alt}
+                    className="h-auto w-full object-cover transition-opacity duration-200"
+                    loading="lazy"
+                  />
+                  {/* Subtle glass reflection highlight */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.04] to-transparent" />
+                </div>
+              </div>
+
+              {/* Card Footer Micro-Action */}
+              <div className="mt-5 pt-3 border-t border-[var(--line)]/60 flex items-center justify-between text-xs font-mono text-[var(--muted)]">
+                <span>Android 8.0 to 15 (ARM64)</span>
+                <span className="group-hover:text-[var(--hot)] transition-colors">Screen {idx + 1} of 3</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Fast Install Strip */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border border-[var(--line)] bg-[var(--raised)]/40 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <span className="size-2 rounded-full bg-[var(--hot)] animate-pulse" />
+            <span className="font-mono text-xs text-[var(--muted)]">
+              Latest build: <strong className="text-[var(--text)]">v0.1.2-alpha</strong> • Commit <code className="bg-black/40 px-1 py-0.5 text-[var(--hot)]">d7b6603</code> • SHA-256 verified
+            </span>
+          </div>
+          <a
+            href="https://github.com/AyushDubey23/jitter-android/releases/tag/v0.1.2-alpha"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--hot)] hover:underline"
+          >
+            <span>View Release Changelog & Checksums</span>
+            <ArrowRight className="size-3.5" />
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function InteractiveTerminal() {
   const [activeTab, setActiveTab] = useState(0)
   const [copied, setCopied] = useState(false)
@@ -1164,6 +1336,7 @@ export default function Page() {
         <LiveDashboard />
         <FailureModesExplorer />
         <ControlledRerunsSection />
+        <AndroidAppShowcase />
         <InteractiveTerminal />
         <ArchitectureSection />
       </main>
