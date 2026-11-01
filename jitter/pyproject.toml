@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 # Primary distribution name. Note: 'jitter' is taken on PyPI.
 # Proposed alternatives: 'jitter-ml' (selected), 'jitterbench', 'jitter-latency'.
 name = "jitter-ml"
-version = "0.1.0"
+version = "0.1.1"
 description = "Root-cause analysis tool for on-device ML latency"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -62,6 +62,16 @@ jitter = "jitter.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/jitter"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.hypothesis",
+    "/.github",
+    "/STATUS.md",
+    "/.coverage",
+    "/scratch",
+    "*.log",
+]
 
 [tool.ruff]
 line-length = 100

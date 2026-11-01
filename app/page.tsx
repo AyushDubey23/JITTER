@@ -291,28 +291,30 @@ const SAMPLE_REPORTS: Record<string, SampleReport> = {
 const CLI_TABS = [
   {
     id: 'diagnose',
-    command: 'jitter diagnose mobilenet_v3.tflite --device 24151FDH2000P8',
-    output: `[1/4] cold vs warm ......... warmup 6 iters, steady-state from iter 7
-[2/4] cooldown ............. median 14.1 ms after 180s rest (restored)
-[3/4] delegate swap ........ requested GPU, executed GPU (speedup 2.8x)
-[4/4] quiet device ......... noise floor +/- 0.4 ms
-
-VERDICT: thermal_throttling   confidence: 0.94
-evidence:
-  - Theil-Sen slope: +0.0242 ms/iter (threshold >= 0.0200 ms/iter)
-  - Temperature climbed to 44.2°C; thermal status reached THROTTLED (level 2)
-  - Cooldown recovery: recovered to 14.1 ms after 180s rest (Cliff's delta 0.81)`,
+    command: 'jitter diagnose report.json',
+    output: `+- Verdict: THERMAL_THROTTLING (Confidence: 94.0%) ---------------------------+
+| Evidence & Observations:                                                    |
+|   + Monotonic latency degradation slope of 0.0242 ms/iter exceeds threshold |
+|     0.0200 ms/iter.                                                         |
+|   + Device reached thermal throttling status 2 (battery temperature: 44.2°C)|
+|   + Rested cooldown run recovered baseline latency (Cliff's delta: 0.81).   |
+|   + Ruled out delegate fallback: requested 'gpu' executed on 'gpu' without  |
+|     CPU parity.                                                             |
+|   + Ruled out background noise: transient bursts absent; quiet mode showed  |
+|     no tail latency suppression.                                            |
+|   + Ruled out warmup drift: cold startup ratio did not indicate startup delay|
++-----------------------------------------------------------------------------+`,
   },
   {
     id: 'run',
-    command: 'jitter run candidate.tflite --iterations 60 --cooldown 180 -o report.json',
+    command: 'jitter run --model mobilenet_v3.tflite --runner adb --serial 24151FDH2000P8 -o report.json',
     output: `Executing controlled 4-rerun plan on Pixel 7 (Tensor G2)...
   • Battery: 88.5% (safe threshold >= 30%)
   • Pre-flight SoC temperature: 30.8°C (cooling target <= 32.0°C)
-  • [Run 1/4] Cold fresh process start ............. [60 iters, 100%]
-  • [Run 2/4] Thermal cooldown rest (180s) ........ [60 iters, 100%]
-  • [Run 3/4] Delegate swap (Forced CPU) .......... [60 iters, 100%]
-  • [Run 4/4] Quiet device mode (Airplane ON) ..... [60 iters, 100%]
+  • [1/4] Cold fresh process start ............. [60 iters, 100%]
+  • [2/4] Thermal cooldown rest (180s) ........ [60 iters, 100%]
+  • [3/4] Delegate swap (Forced CPU) .......... [60 iters, 100%]
+  • [4/4] Quiet device mode (Airplane ON) ..... [60 iters, 100%]
 Report successfully generated: report.json (55.3 KB)`,
   },
   {
@@ -807,7 +809,6 @@ function LiveDashboard() {
             <div>
               <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
                 <span className="font-mono text-xs text-[var(--muted)]">ROOT-CAUSE VERDICT</span>
-                <span className="font-mono text-xs text-[var(--hot)]">CALIBRATED</span>
               </div>
 
               <div className="mt-5">

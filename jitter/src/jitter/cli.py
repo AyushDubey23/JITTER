@@ -501,7 +501,7 @@ def _render_diagnosis_panel(diagnosis: Any) -> None:
 
     lines.append("[bold]Evidence & Observations:[/bold]")
     for item in diagnosis.evidence:
-        status_symbol = "[green]✓[/green]" if item.passed else "[dim]•[/dim]"
+        status_symbol = "[green]+[/green]" if item.passed else "[dim]-[/dim]"
         lines.append(f"  {status_symbol} {item.plain_language}")
 
     if diagnosis.secondary:

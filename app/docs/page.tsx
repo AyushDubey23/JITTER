@@ -86,7 +86,7 @@ const docsData: Record<string, DocSection> = {
         paragraphs: [
           'Connect your Android phone with USB debugging enabled. Verify device battery and thermal readiness before running benchmarks:'
         ],
-        code: `# List connected devices and check readiness\njitter devices\n\n# Output:\n# Serial            Model          SoC         Battery  Temp   Status\n# ----------------  -------------  ----------  -------  -----  ------\n# 24151FDH2000P8    Pixel 7        Tensor G2   88.5%    31.2C  READY\n\n# Execute complete 4-rerun controlled benchmark plan\njitter run mobilenet_v3.tflite --device 24151FDH2000P8 --iterations 60 --cooldown 180 -o result.json`,
+        code: `# List connected devices and check readiness\njitter devices\n\n# Output:\n# Serial            Model          SoC         Battery  Temp   Status\n# ----------------  -------------  ----------  -------  -----  ------\n# 24151FDH2000P8    Pixel 7        Tensor G2   88.5%    31.2C  READY\n\n# Execute complete 4-rerun controlled benchmark plan\njitter run --model mobilenet_v3.tflite --runner adb --serial 24151FDH2000P8 --iterations 60 -o result.json`,
         codeLang: 'bash'
       }
     ]
@@ -160,17 +160,35 @@ const docsData: Record<string, DocSection> = {
         codeLang: 'python'
       },
       {
-        heading: 'Empirical Verification Metrics',
+        heading: 'Synthetic Benchmark Verification Metrics',
         paragraphs: [
-          'The engine was calibrated against the validation benchmark suite across 90 controlled scenarios covering mobile architectures (Pixel 7, Galaxy S23, Xiaomi 13):'
+          'The engine\'s decision rules were evaluated against a synthetic validation benchmark suite across 90 controlled synthetic scenarios modeled on mobile architecture profiles (Pixel 7, Galaxy S23, Xiaomi 13). Note: These metrics reflect engine consistency on synthetic data generators; real-device physical hardware validation is in progress.'
         ],
         table: {
           headers: ['Metric', 'Achieved Score', 'Target Threshold', 'Status'],
           rows: [
-            ['Macro-F1 Score', '1.0000', '>= 0.95', 'PASSED (Zero misclassifications)'],
-            ['Expected Calibration Error (ECE)', '0.0398', '<= 0.05', 'PASSED (Well-calibrated probabilities)'],
-            ['Brier Score', '0.0020', '<= 0.05', 'PASSED (High probability accuracy)'],
+            ['Macro-F1 Score (Synthetic)', '1.0000', '>= 0.95', 'PASSED (Synthetic ground-truth consistency)'],
+            ['Expected Calibration Error (ECE)', '0.0398', '<= 0.05', 'PASSED (Well-calibrated probabilities on synthetic data)'],
+            ['Brier Score', '0.0020', '<= 0.05', 'PASSED (High synthetic probability accuracy)'],
             ['Mean Diagnosis Latency', '84.19 ms', '< 250 ms', 'PASSED (Instant offline execution)']
+          ]
+        }
+      },
+      {
+        heading: 'Statistical Core Monte Carlo Validation',
+        paragraphs: [
+          'Statistical estimators are empirically validated using Monte Carlo simulations against known theoretical ground truth (seed 42, 500 trials). Moving-block bootstrap exhibits finite-sample undercoverage on dependent medians, reported honestly below as a known gap:'
+        ],
+        table: {
+          headers: ['Statistical Method', 'Property Evaluated', 'Target / Theoretical', 'Observed Simulation', 'Status'],
+          rows: [
+            ['Geyer IPS (n_eff)', 'AR(1) phi=0.6 Sample Size', '250.0 (n=1000)', '248.0 +/- 42.5 (Bias: -0.8%)', 'PASS (Within 15%)'],
+            ['CUSUM Changepoint', 'Step Recovery (k=20)', 'k in [18, 22] (>95%)', '100.0% (k=20 exact: 0.0%)', 'PASS'],
+            ['Theil-Sen Slope', 'Linear Drift Slope (ms/iter)', '0.0500', '0.0499', 'PASS'],
+            ['Theil-Sen Rank CI', '95% CI Coverage', '95.0% nominal', '95.6%', 'PASS'],
+            ['Block Permutation', 'Type I Error Rate (alpha=0.05)', '<= 6.0%', '5.0%', 'PASS'],
+            ['Block Permutation', 'Power under 10% Shift', '>= 90.0% (n=40)', '90.2%', 'PASS'],
+            ['Moving-Block Bootstrap', '95% CI Coverage on AR(1) Median', '95.0% nominal', '87.7%', 'KNOWN GAP (Undercoverage: 87.7% < 95.0%)']
           ]
         }
       }
@@ -328,7 +346,7 @@ const docsData: Record<string, DocSection> = {
         paragraphs: [
           'Incorporate Jitter into your PR checks to guard against silent model bloat or operator fallbacks:'
         ],
-        code: `name: ML Latency Regression Guard\n\non:\n  pull_request:\n    paths:\n      - "models/**"\n\njobs:\n  benchmark:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: "3.13"\n      - run: pip install "jitter-ml[onnx]"\n      - name: Run benchmark and regression check\n        run: |\n          # Returns exit code 2 if genuine regression is detected\n          jitter run models/candidate.onnx --iterations 60 -o pr_report.json\n          jitter diagnose pr_report.json`,
+        code: `name: ML Latency Regression Guard\n\non:\n  pull_request:\n    paths:\n      - "models/**"\n\njobs:\n  benchmark:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: "3.13"\n      - run: pip install "jitter-ml[onnx]"\n      - name: Run benchmark and regression check\n        run: |\n          # Returns exit code 2 if genuine regression is detected\n          jitter run --model models/candidate.onnx --runner onnx --iterations 60 -o pr_report.json\n          jitter diagnose pr_report.json`,
         codeLang: 'yaml'
       }
     ]
@@ -520,7 +538,7 @@ export default function Docs() {
         {/* Center Main Content */}
         <main className="min-w-0">
           <div className="border border-[var(--orange)]/30 bg-[var(--surface)] px-4 py-2.5 font-mono text-xs text-[var(--orange)]">
-            Verified with Jitter v0.1.0 engine (Macro-F1 1.0000, ECE 0.0398).
+            Verified with Jitter v0.1.1 engine on synthetic validation suite (Macro-F1 1.0000, ECE 0.0398).
           </div>
 
           <article className="pt-8">

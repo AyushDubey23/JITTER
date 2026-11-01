@@ -4,7 +4,7 @@
 
 Jitter reruns your model benchmark under four controlled conditions and tells you *why* it is slow or inconsistent on a real phone: warmup, thermal throttling, delegate fallback, background load, or a genuine regression.
 
-> **Status: design phase.** Nothing in this repository is released yet. The CLI, API and report schema below are the design target and will change. Every number in the docs and on the website is simulated until the first measured case study is published. "Jitter" is a working name.
+> **Status: Alpha release (v0.1.1).** Published on PyPI as `jitter-ml`. Controlled reruns, statistical validation harness, CLI, and report schema v0.1 are implemented. Physical on-device hardware telemetry and field validation are under active development.
 
 ---
 
@@ -57,29 +57,34 @@ flowchart LR
 2. **Android runner** (Kotlin, Jetpack Compose, MVI): runs the model with LiteRT or ONNX Runtime Mobile in a foreground service and logs per-iteration latency, `PowerManager` thermal status and headroom, battery temperature, and the delegate that actually ran.
 3. **Web dashboard** (Next.js, static): load report files to compare runs and read the verdict. Reports are parsed in the browser. There is no backend, no account and no upload.
 
-## Planned usage
+## Usage
 
 ```bash
-pip install jitter
+pip install jitter-ml
 
-# benchmark a model on a connected phone
-jitter run model.tflite --device auto
+# run the four controlled reruns on an Android device via ADB
+jitter run --model mobilenet_v2 --runner adb --serial <device-serial> --output report.json
 
-# compare two runs
-jitter compare before.json after.json
+# or generate a synthetic benchmark report
+jitter simulate --failure-mode thermal_throttling --output report.json
 
-# run the four reruns and classify the cause
-jitter diagnose after.json
+# compare two runs statistically
+jitter compare before.json after.json --run-a 0 --run-b 1
+
+# evaluate root cause on a benchmark report
+jitter diagnose report.json
 ```
 
 Example output (simulated):
 
 ```
-$ jitter diagnose mobilenet_v3.tflite --device pixel-7a
+$ jitter run --model mobilenet_v3.tflite --runner adb --serial pixel-7a --output report.json
 [1/4] cold vs warm .......... warmup 6 iters, steady-state from iter 7
 [2/4] cooldown .............. median 14.1 ms after 240 s rest (was 33.0 ms)
-[3/4] delegate swap ......... requested NNAPI, executed GPU, no fallback
+[3/4] delegate swap ......... requested GPU, executed GPU, no fallback
 [4/4] quiet device .......... noise floor +/- 0.4 ms
+
+$ jitter diagnose report.json
 verdict: thermal_throttling   confidence 0.93
 drift: +2.3x over 90 s (95% CI 2.1 to 2.5x)
 ```
@@ -144,11 +149,11 @@ Emulators are not used: they have no real thermal behavior and no real NNAPI.
 
 ## Contributing
 
-The project is at the design stage. Issues with ideas, device-specific thermal or delegate quirks, and statistical critique are the most useful contributions right now.
+The project is in Alpha (v0.1.1). Issues with ideas, device-specific thermal or delegate quirks, and statistical critique are the most useful contributions right now.
 
 ## License
 
-MIT (planned).
+MIT
 
 ## Author
 

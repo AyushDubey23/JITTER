@@ -148,6 +148,12 @@ def run_validation(n_trials: int = 1000, seed: int = 42) -> str:
     boot_coverage_rate = (boot_covered / boot_trials) * 100.0
     elapsed_s = time.time() - start_time
 
+    boot_status = (
+        "**PASS**"
+        if boot_coverage_rate >= 92.0
+        else f"**KNOWN GAP** (Undercoverage: {boot_coverage_rate:.1f}% < 95.0%)"
+    )
+
     # Generate Markdown Report
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     report = f"""# Statistical Core Validation Report
@@ -166,7 +172,7 @@ All metrics in this document are strictly computed from automated Monte Carlo si
 | **Theil-Sen Rank CI** | 95% Confidence Interval Coverage | 95.0% nominal | **{drift_ci_coverage:.1f}%** | **PASS** |
 | **Block Permutation Test** | Type I Error Rate ($\\alpha=0.05$) | $\\le 6.0\\%$ | **{type1_error_rate:.1f}%** | **PASS** |
 | **Block Permutation Test** | Power under 10% Latency Shift | $\\ge 90.0\\%$ ($n=40$) | **{power_rate:.1f}%** | **PASS** |
-| **Moving-Block Bootstrap** | 95% CI Coverage on AR(1) Median | 95.0% nominal | **{boot_coverage_rate:.1f}%** | **PASS** |
+| **Moving-Block Bootstrap** | 95% CI Coverage on AR(1) Median | 95.0% nominal | **{boot_coverage_rate:.1f}%** | {boot_status} |
 
 ## Methodological Details
 
@@ -186,7 +192,7 @@ All metrics in this document are strictly computed from automated Monte Carlo si
 ### 4. Hypothesis Testing & Effect Size
 - **Type I Error**: Two independent identical distributions evaluated at nominal $\\alpha = 0.05$ produced an empirical false rejection rate of **{type1_error_rate:.1f}%**, confirming control over false positive diagnosis.
 - **Power**: Under a true difference of medians equal to 10% of baseline, the test achieved **{power_rate:.1f}%** detection power.
-- **Moving-Block Bootstrap**: Accounting for serial correlation via Politis & White (2004) spectral block length selection achieved **{boot_coverage_rate:.1f}%** coverage on 95% intervals.
+- **Moving-Block Bootstrap (Known Gap)**: Accounting for serial correlation via Politis & White (2004) spectral block length selection achieved **{boot_coverage_rate:.1f}%** empirical coverage against a 95% nominal target on AR(1) median estimation. Standard moving-block bootstrap exhibits known finite-sample undercoverage on dependent medians with automatic spectral plug-in bandwidths; documented as a known gap pending studentized intervals or adaptive block-length tuning.
 """
     return report
 

@@ -14,7 +14,7 @@ All metrics in this document are strictly computed from automated Monte Carlo si
 | **Theil-Sen Rank CI** | 95% Confidence Interval Coverage | 95.0% nominal | **95.6%** | **PASS** |
 | **Block Permutation Test** | Type I Error Rate ($\alpha=0.05$) | $\le 6.0\%$ | **5.0%** | **PASS** |
 | **Block Permutation Test** | Power under 10% Latency Shift | $\ge 90.0\%$ ($n=40$) | **90.2%** | **PASS** |
-| **Moving-Block Bootstrap** | 95% CI Coverage on AR(1) Median | 95.0% nominal | **87.7%** | **PASS** |
+| **Moving-Block Bootstrap** | 95% CI Coverage on AR(1) Median | 95.0% nominal | **87.7%** | **KNOWN GAP** (Undercoverage: 87.7% < 95.0%) |
 
 ## Methodological Details
 
@@ -34,4 +34,4 @@ All metrics in this document are strictly computed from automated Monte Carlo si
 ### 4. Hypothesis Testing & Effect Size
 - **Type I Error**: Two independent identical distributions evaluated at nominal $\alpha = 0.05$ produced an empirical false rejection rate of **5.0%**, confirming control over false positive diagnosis.
 - **Power**: Under a true difference of medians equal to 10% of baseline, the test achieved **90.2%** detection power.
-- **Moving-Block Bootstrap**: Accounting for serial correlation via Politis & White (2004) spectral block length selection achieved **87.7%** coverage on 95% intervals.
+- **Moving-Block Bootstrap (Known Gap)**: Accounting for serial correlation via Politis & White (2004) spectral block length selection achieved **87.7%** empirical coverage against a 95% nominal target on AR(1) median estimation. Standard moving-block bootstrap exhibits known finite-sample undercoverage on dependent medians with automatic spectral plug-in bandwidths; documented as a known gap pending studentized intervals or adaptive block-length tuning.

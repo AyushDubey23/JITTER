@@ -216,15 +216,17 @@ def evaluate_delegate_fallback(
     evidence: list[EvidenceItem] = []
 
     mismatch = feat.delegate_mismatch
+    if mismatch:
+        match_lang = f"Delegate mismatch: requested '{feat.delegate_requested}' but actual executed delegate was '{feat.delegate_executed}'."
+    else:
+        match_lang = f"Requested delegate '{feat.delegate_requested}' matched actual executed delegate '{feat.delegate_executed}'."
     evidence.append(
         EvidenceItem(
             rule_id="delegate_execution_match",
             observed_value=feat.delegate_executed,
             threshold=feat.delegate_requested,
             passed=not mismatch,
-            plain_language=(
-                f"Requested delegate '{feat.delegate_requested}' resulted in actual executed delegate '{feat.delegate_executed}'."
-            ),
+            plain_language=match_lang,
         )
     )
 
@@ -233,16 +235,23 @@ def evaluate_delegate_fallback(
         abs(feat.cpu_cliffs_delta) <= DELEGATE_CPU_CLIFFS_DELTA_CEILING
         or abs(feat.cpu_shift_ms) <= 5.0
     )
+    if passed_cpu_parity:
+        parity_lang = (
+            f"Comparison against CPU reference showed Cliff's delta {feat.cpu_cliffs_delta:.3f} "
+            f"({feat.cpu_cliffs_magnitude}), indicating performance parity with CPU fallback."
+        )
+    else:
+        parity_lang = (
+            f"Comparison against CPU reference showed Cliff's delta {feat.cpu_cliffs_delta:.3f} "
+            f"({feat.cpu_cliffs_magnitude}), confirming accelerator operates distinctly faster than CPU."
+        )
     evidence.append(
         EvidenceItem(
             rule_id="delegate_vs_cpu_parity",
             observed_value=float(np.round(feat.cpu_cliffs_delta, 3)),
             threshold=DELEGATE_CPU_CLIFFS_DELTA_CEILING,
             passed=passed_cpu_parity,
-            plain_language=(
-                f"Comparison against CPU reference showed Cliff's delta {feat.cpu_cliffs_delta:.3f} "
-                f"({feat.cpu_cliffs_magnitude}), indicating delegate fallback to CPU performance."
-            ),
+            plain_language=parity_lang,
         )
     )
 
@@ -283,16 +292,23 @@ def evaluate_background_noise(
     )
 
     passed_quiet = feat.quiet_p99_reduction_ratio >= NOISE_QUIET_P99_REDUCTION_RATIO
+    if feat.quiet_p99_reduction_ratio > 0:
+        quiet_lang = (
+            f"Quiet device mode suppressed tail latency by {feat.quiet_p99_reduction_ratio * 100:.1f}% "
+            f"(outliers dropped to {feat.quiet_outlier_count})."
+        )
+    else:
+        quiet_lang = (
+            f"Quiet device mode did not suppress tail latency (ratio: {feat.quiet_p99_reduction_ratio * 100:.1f}%, "
+            f"outliers: {feat.quiet_outlier_count})."
+        )
     evidence.append(
         EvidenceItem(
             rule_id="quiet_mode_p99_suppression",
             observed_value=float(np.round(feat.quiet_p99_reduction_ratio, 2)),
             threshold=NOISE_QUIET_P99_REDUCTION_RATIO,
             passed=passed_quiet,
-            plain_language=(
-                f"Quiet device mode suppressed tail latency by {feat.quiet_p99_reduction_ratio * 100:.1f}% "
-                f"(outliers dropped to {feat.quiet_outlier_count})."
-            ),
+            plain_language=quiet_lang,
         )
     )
 
