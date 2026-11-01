@@ -70,7 +70,7 @@ const docsData: Record<string, DocSection> = {
         paragraphs: [
           'Verify that the Jitter CLI executable is available on your PATH:'
         ],
-        code: `$ jitter version\njitter v0.1.0\n\n$ jitter --help`,
+        code: `$ jitter version\njitter v0.1.2\n\n$ jitter --help`,
         codeLang: 'bash'
       },
       {

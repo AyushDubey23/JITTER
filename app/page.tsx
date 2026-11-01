@@ -523,7 +523,7 @@ function PinnedHero() {
           <div className="max-w-4xl">
             <div className="mb-4 inline-flex items-center gap-2 border border-[var(--hot)]/40 bg-[var(--surface)] px-3 py-1 font-mono text-xs text-[var(--hot)]">
               <Sparkles className="size-3" />
-              <span>JITTER v0.1.0 · ROOT-CAUSE ON-DEVICE ML ENGINE</span>
+              <span>JITTER v0.1.2 · ROOT-CAUSE ON-DEVICE ML ENGINE</span>
             </div>
             <div className="thermal-wordmark-shell w-full" style={{ '--heat': heat } as React.CSSProperties}>
               <h1 className="thermal-wordmark font-display text-[clamp(3.8rem,17vw,13rem)] font-black leading-[.8] tracking-[-.09em]">
@@ -1101,7 +1101,7 @@ function ArchitectureSection() {
         <div className="mt-12 grid gap-4 md:grid-cols-4">
           {[
             { step: '01', title: 'Python CLI & Harness', desc: 'Typer orchestrator commands, block bootstrap statistics, and diagnosis engine.' },
-            { step: '02', title: 'ADB Socket Bridge', desc: 'TCP reverse tunneling over port 9008 with battery & thermal pre-flight checks.' },
+            { step: '02', title: 'ADB Socket Bridge', desc: 'TCP reverse tunneling over port 8080 with battery & thermal pre-flight checks.' },
             { step: '03', title: 'Android Foreground APK', desc: 'Restful wire protocol server running TFLite/LiteRT with kernel telemetry logging.' },
             { step: '04', title: 'Client-Side Dashboard', desc: 'Zero-cloud local HTML/SVG reports for root-cause inspection and team sharing.' },
           ].map((item) => (

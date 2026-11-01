@@ -4,7 +4,7 @@
 
 Jitter reruns your model benchmark under four controlled conditions and tells you *why* it is slow or inconsistent on a real phone: warmup, thermal throttling, delegate fallback, background load, or a genuine regression.
 
-> **Status: Alpha release (v0.1.1).** Published on PyPI as `jitter-ml`. Controlled reruns, statistical validation harness, CLI, and report schema v0.1 are implemented. Physical on-device hardware telemetry and field validation are under active development.
+> **Status: Alpha release (v0.1.2).** Published on PyPI as `jitter-ml`. Controlled reruns, statistical validation harness, CLI, and report schema v0.1 are implemented. Physical on-device hardware telemetry and field validation are under active development.
 
 ---
 
